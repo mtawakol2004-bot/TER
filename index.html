@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>TER — Wheel Slip Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:     #0a0a0f;
+    --panel:  #12121a;
+    --border: #1e1e2e;
+    --accent: #00e5ff;
+    --warn:   #ff6b35;
+    --good:   #39ff14;
+    --text:   #e0e0f0;
+    --muted:  #555577;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html { background:var(--bg); overscroll-behavior:none; }
+
+  body {
+    background:var(--bg); color:var(--text);
+    font-family:'DM Sans',sans-serif;
+    min-height:100svh;
+    display:flex; flex-direction:column; align-items:center;
+    padding:env(safe-area-inset-top,0.75rem) 1rem env(safe-area-inset-bottom,0.75rem);
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:0.5rem; width:100%; max-width:440px;
+    margin-bottom:0.75rem; flex-shrink:0;
+  }
+  .tab {
+    font-family:'Space Mono',monospace; font-size:0.65rem; letter-spacing:0.1em;
+    padding:0.7rem; min-height:44px; border-radius:10px;
+    border:1px solid var(--border); background:transparent; color:var(--muted);
+    cursor:pointer; transition:all 0.2s; touch-action:manipulation; user-select:none;
+  }
+  .tab.active { background:var(--accent); color:#000; border-color:var(--accent); font-weight:700; }
+
+  /* ── CARD ── */
+  .card {
+    background:var(--panel); border:1px solid var(--border); border-radius:20px;
+    padding:1.2rem 1.1rem; width:100%; max-width:440px;
+    display:flex; flex-direction:column; gap:1rem;
+  }
+  .page { display:none; flex-direction:column; gap:1rem; }
+  .page.active { display:flex; }
+
+  .tag { font-family:'Space Mono',monospace; font-size:0.58rem; letter-spacing:0.22em; color:var(--accent); }
+  h1   { font-family:'Space Mono',monospace; font-size:clamp(0.95rem,5vw,1.2rem); line-height:1.3; margin-top:0.2rem; }
+
+  /* ── SCENE ── */
+  .scene {
+    width:100%; height:100px; position:relative; border-radius:10px;
+    overflow:hidden; background:#0d0d14; border:1px solid var(--border); flex-shrink:0;
+  }
+  .ground { position:absolute; bottom:0;left:0;right:0; height:26px; transition:background 0.4s; }
+  .ground.firm { background:linear-gradient(180deg,#a0732a,#7a521a); }
+  .ground.soft { background:linear-gradient(180deg,#6b4a1f,#3d2a0e); }
+  .robot { position:absolute; bottom:26px; left:30px; }
+  .robot-body {
+    width:50px; height:28px;
+    background:linear-gradient(135deg,#1e3a5f,#0d2240);
+    border:2px solid var(--accent); border-radius:6px; position:relative;
+  }
+  .robot-body::after {
+    content:''; position:absolute; top:5px; left:7px;
+    width:9px; height:6px; background:var(--accent); border-radius:2px; opacity:0.5;
+  }
+  .wheel {
+    width:20px; height:20px; border-radius:50%;
+    background:#1a1a1a; border:3px solid #444;
+    position:absolute; bottom:-12px;
+  }
+  .wheel::after {
+    content:''; position:absolute; top:50%; left:50%;
+    width:2px; height:7px; background:var(--accent);
+    transform-origin:top center; transform:translateX(-50%); border-radius:1px;
+  }
+  .wheel.left  { left:3px; }
+  .wheel.right { right:3px; }
+  .wheel.spinning { animation:spin var(--spd,0.3s) linear infinite; }
+  .wheel.slipping { animation:spin 0.07s linear infinite; border-color:var(--warn); }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* ── STATS ── */
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:0.5rem; }
+  .stat {
+    background:var(--bg); border:1px solid var(--border); border-radius:10px;
+    padding:0.65rem 0.55rem; display:flex; flex-direction:column; gap:2px; min-width:0;
+  }
+  .stat-label { font-family:'Space Mono',monospace; font-size:clamp(0.48rem,2.2vw,0.6rem); color:var(--muted); letter-spacing:0.08em; }
+  .stat-value { font-family:'Space Mono',monospace; font-size:clamp(1.1rem,6vw,1.5rem); font-weight:700; line-height:1; transition:color 0.25s; }
+  .stat-sub   { font-family:'Space Mono',monospace; font-size:clamp(0.44rem,2vw,0.58rem); color:var(--muted); transition:color 0.25s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  /* ── METER ── */
+  .meter-bar  { height:12px; background:var(--border); border-radius:99px; overflow:hidden; position:relative; }
+  .opt-zone   { position:absolute; top:0;bottom:0; left:8%; width:7%; background:rgba(57,255,20,0.15); border-left:1px solid rgba(57,255,20,0.5); border-right:1px solid rgba(57,255,20,0.5); }
+  .meter-fill { height:100%; border-radius:99px; transition:width 0.15s,background 0.2s; }
+  .meter-ticks { display:flex; justify-content:space-between; font-family:'Space Mono',monospace; font-size:clamp(0.44rem,2vw,0.54rem); color:var(--muted); margin-top:4px; }
+
+  /* ── CURVE ── */
+  .curve-label { font-family:'Space Mono',monospace; font-size:0.56rem; color:var(--muted); letter-spacing:0.14em; margin-bottom:4px; }
+  canvas { width:100%; display:block; border-radius:8px; touch-action:none; }
+
+  /* ── CONTROLS ── */
+  .controls { display:flex; flex-direction:column; gap:0.85rem; }
+  .slider-row { display:flex; align-items:center; gap:0.75rem; }
+  .slider-row label { font-family:'Space Mono',monospace; font-size:0.62rem; color:var(--muted); min-width:52px; flex-shrink:0; }
+  input[type=range] {
+    -webkit-appearance:none; appearance:none;
+    flex:1; height:6px; background:var(--border);
+    border-radius:99px; outline:none; cursor:pointer; touch-action:pan-y;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:36px; height:36px; border-radius:50%;
+    background:var(--accent); border:4px solid var(--bg); cursor:pointer;
+    box-shadow:0 0 10px rgba(0,229,255,0.4);
+  }
+  input[type=range]::-moz-range-thumb {
+    width:36px; height:36px; border-radius:50%;
+    background:var(--accent); border:4px solid var(--bg);
+  }
+  .tval { font-family:'Space Mono',monospace; font-size:0.8rem; color:var(--accent); min-width:36px; text-align:right; flex-shrink:0; }
+  .soil-btns { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; }
+  .btn {
+    font-family:'Space Mono',monospace; font-size:clamp(0.58rem,3vw,0.7rem);
+    padding:0.85rem 0.4rem; min-height:44px; border-radius:10px;
+    border:1px solid var(--border); background:transparent; color:var(--muted);
+    cursor:pointer; transition:all 0.18s; touch-action:manipulation;
+    letter-spacing:0.04em; user-select:none; line-height:1.2;
+  }
+  .btn.active      { background:var(--accent); color:#000; border-color:var(--accent); font-weight:700; }
+  .btn.warn-active { background:var(--warn);   color:#000; border-color:var(--warn);   font-weight:700; }
+
+  /* ══════════════════════════
+     PAGE 2 — OBSERVER CHAIN
+  ══════════════════════════ */
+  .toggle-row { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; }
+
+  .chain { display:flex; flex-direction:column; gap:0; }
+
+  .chain-node {
+    background:var(--bg); border:1px solid var(--border);
+    border-radius:12px; padding:0.7rem 0.85rem;
+    transition:border-color 0.35s, box-shadow 0.35s;
+  }
+  .chain-node.active-node { border-color:var(--accent); box-shadow:0 0 12px rgba(0,229,255,0.15); }
+  .chain-node.warn-node   { border-color:var(--warn);   box-shadow:0 0 12px rgba(255,107,53,0.15); }
+  .chain-node.good-node   { border-color:var(--good);   box-shadow:0 0 12px rgba(57,255,20,0.15); }
+
+  .node-title { font-family:'Space Mono',monospace; font-size:0.56rem; letter-spacing:0.12em; color:var(--muted); margin-bottom:0.25rem; }
+  .node-main  { font-family:'Space Mono',monospace; font-size:clamp(0.68rem,3.5vw,0.82rem); font-weight:700; color:var(--text); transition:color 0.3s; line-height:1.3; }
+  .node-sub   { font-family:'Space Mono',monospace; font-size:0.58rem; color:var(--muted); margin-top:0.2rem; transition:color 0.3s; line-height:1.4; }
+
+  .mini-bar  { height:5px; background:var(--border); border-radius:99px; overflow:hidden; margin-top:0.45rem; }
+  .mini-fill { height:100%; border-radius:99px; transition:width 0.4s,background 0.4s; }
+
+  /* arrow connector */
+  .arrow { display:flex; flex-direction:column; align-items:center; padding:0 0; }
+  .arrow-shaft {
+    width:2px; height:18px; position:relative; overflow:visible;
+    background:var(--border); transition:background 0.3s;
+  }
+  /* animated dot travelling down */
+  .arrow-shaft.flowing::before {
+    content:''; position:absolute; left:50%; transform:translateX(-50%);
+    width:7px; height:7px; border-radius:50%; background:var(--accent);
+    animation:travelDown 0.55s linear infinite;
+  }
+  .arrow-shaft.flowing-warn::before  { background:var(--warn);  animation:travelDown 0.4s linear infinite; }
+  .arrow-shaft.flowing-good::before  { background:var(--good);  animation:travelDown 0.5s linear infinite; }
+  @keyframes travelDown { from{top:-4px;opacity:1} to{top:100%;opacity:0} }
+
+  .arrow-head { width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:7px solid var(--border); transition:border-top-color 0.3s; }
+  .arrow-sig  { font-family:'Space Mono',monospace; font-size:0.5rem; color:var(--muted); margin-top:1px; letter-spacing:0.05em; transition:color 0.3s; }
+
+  /* ojeda formula */
+  .formula {
+    background:var(--bg); border:1px solid var(--border); border-radius:10px;
+    padding:0.75rem 0.85rem; font-family:'Space Mono',monospace;
+    font-size:clamp(0.54rem,2.8vw,0.66rem); color:var(--accent);
+    line-height:1.8; transition:border-color 0.3s;
+  }
+  .formula .dim { color:var(--muted); }
+
+  footer {
+    margin-top:0.75rem; font-family:'Space Mono',monospace; font-size:0.52rem;
+    color:#252530; letter-spacing:0.1em; text-align:center;
+    padding-bottom:env(safe-area-inset-bottom,0px); flex-shrink:0;
+  }
+</style>
+</head>
+<body>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" id="tab1" onclick="switchPage(1)">01 · SLIP SIMULATOR</button>
+  <button class="tab"        id="tab2" onclick="switchPage(2)">02 · OBSERVER</button>
+</div>
+
+<div class="card">
+
+  <!-- ════════ PAGE 1 ════════ -->
+  <div class="page active" id="page1">
+    <div>
+      <div class="tag">TER · LYON 1 · 2025</div>
+      <h1>Wheel Slip<br>Simulator</h1>
+    </div>
+
+    <div class="scene" id="scene">
+      <div class="ground firm" id="ground"></div>
+      <div class="robot" id="robot">
+        <div class="robot-body"></div>
+        <div class="wheel left  spinning" id="wL"></div>
+        <div class="wheel right spinning" id="wR"></div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">SLIP s</div>
+        <div class="stat-value" id="vSlip">0%</div>
+        <div class="stat-sub"   id="vStatus">STOPPED</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">SPEED v</div>
+        <div class="stat-value" id="vSpeed" style="color:var(--accent)">0.0</div>
+        <div class="stat-sub">cm/s</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">TRACTION F</div>
+        <div class="stat-value" id="vTrac" style="color:var(--good)">0.0</div>
+        <div class="stat-sub">N</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="meter-bar">
+        <div class="opt-zone"></div>
+        <div class="meter-fill" id="mFill" style="width:0%"></div>
+      </div>
+      <div class="meter-ticks">
+        <span>0%</span>
+        <span style="color:var(--good)">8–15% optimal</span>
+        <span>100%</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="curve-label">F(s) · TRACTION vs SLIP — Janosi-Hanamoto</div>
+      <canvas id="cv" height="100"></canvas>
+    </div>
+
+    <div class="controls">
+      <div class="slider-row">
+        <label>TORQUE τ</label>
+        <input type="range" id="slider" min="0" max="100" value="10"
+               oninput="torque=+this.value;document.getElementById('tv').textContent=torque+'%'">
+        <span class="tval" id="tv">10%</span>
+      </div>
+      <div class="soil-btns">
+        <button class="btn active" id="bF" onclick="setSoil('firm')">FIRM — 10 N</button>
+        <button class="btn"        id="bS" onclick="setSoil('soft')">SOFT — 5 N</button>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- ════════ PAGE 2 ════════ -->
+  <div class="page" id="page2">
+    <div>
+      <div class="tag">TER · LYON 1 · 2025</div>
+      <h1>Observer<br>Signal Chain</h1>
+    </div>
+    <!-- visual canvas -->
+    <canvas id="p2canvas" height="420" style="width:100%;display:block;border-radius:12px;touch-action:none;background:#0d0d14;border:1px solid var(--border)"></canvas>
+
+    <!-- status caption -->
+    <div id="p2caption" style="font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--muted);text-align:center;line-height:1.6;min-height:2.5rem;transition:color 0.3s"></div>
+
+    <!-- toggle -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem">
+      <button class="btn active" id="btnNoSlip" onclick="setSlipMode(false)">✓ NO SLIP</button>
+      <button class="btn"        id="btnSlip"   onclick="setSlipMode(true)">⚠ SLIP</button>
+    </div>
+  </div>
+
+</div>
+
+<footer>TAWAKOL & BAROUDI HANSALI · SUPERVISOR: A.F. SHAKIL</footer>
+
+<script>
+/* ══════════════════════
+   PAGE SWITCH
+══════════════════════ */
+window.switchPage = function(n) {
+  document.getElementById('page1').classList.toggle('active', n===1);
+  document.getElementById('page2').classList.toggle('active', n===2);
+  document.getElementById('tab1').classList.toggle('active', n===1);
+  document.getElementById('tab2').classList.toggle('active', n===2);
+  if(n===2) p2start();
+};
+
+/* ══════════════════════
+   PAGE 1 — SIMULATOR
+══════════════════════ */
+let soil='firm', torque=10, robotX=30;
+const maxT={firm:10,soft:5};
+const scene =document.getElementById('scene');
+const robot =document.getElementById('robot');
+const wL    =document.getElementById('wL');
+const wR    =document.getElementById('wR');
+const ground=document.getElementById('ground');
+const mFill =document.getElementById('mFill');
+
+function getSlip(tq,s){ return Math.min(100,tq*(s==='soft'?1.8:1.0)*0.9); }
+
+function getTraction(slip,s){
+  const max=maxT[s];
+  if(slip<=0) return 0;
+  if(slip<=15) return max*(slip/15);
+  return max*(0.2+0.8*Math.exp(-(slip-15)/20));
+}
+
+function p1update(){
+  const slip=getSlip(torque,soil);
+  const traction=getTraction(slip,soil);
+  const speed=(traction/maxT[soil])*3.5;
+
+  let col,lbl;
+  if(slip<8)      { col='#aaaacc';     lbl='WEAK GRIP';  }
+  else if(slip<=15){ col='var(--good)'; lbl='⚡ OPTIMAL'; }
+  else             { col='var(--warn)'; lbl='DIGGING ⚠'; }
+
+  document.getElementById('vSlip').textContent   = Math.round(slip)+'%';
+  document.getElementById('vSlip').style.color   = col;
+  document.getElementById('vStatus').textContent = lbl;
+  document.getElementById('vStatus').style.color = col;
+  document.getElementById('vSpeed').textContent  = speed.toFixed(1);
+  document.getElementById('vTrac').textContent   = traction.toFixed(1);
+
+  mFill.style.width=Math.min(slip,100)+'%';
+  mFill.style.background=col;
+
+  const spd=Math.max(0.04,0.32-torque*0.003)+'s';
+  if(slip>15){
+    wL.className='wheel left slipping';
+    wR.className='wheel right slipping';
+    if(Math.random()>0.45) spawnMud(slip);
+  } else {
+    wL.className='wheel left spinning';
+    wR.className='wheel right spinning';
+    wL.style.setProperty('--spd',spd);
+    wR.style.setProperty('--spd',spd);
+  }
+
+  robotX+=speed*0.07;
+  const maxX=scene.offsetWidth-90;
+  if(robotX>maxX) robotX=30;
+  robot.style.left=robotX+'px';
+
+  drawCurve(slip);
+  requestAnimationFrame(p1update);
+}
+
+function spawnMud(slip){
+  const count=slip>60?3:slip>30?2:1;
+  for(let i=0;i<count;i++){
+    const p=document.createElement('div');
+    const rx=parseInt(robot.style.left||30);
+    const sz=3+Math.random()*(slip>50?7:3);
+    Object.assign(p.style,{
+      position:'absolute', width:sz+'px', height:sz+'px',
+      borderRadius:Math.random()>.5?'50%':'2px',
+      background:soil==='firm'
+        ?`hsl(${28+Math.random()*15},55%,${28+Math.random()*15}%)`
+        :`hsl(${20+Math.random()*10},45%,${18+Math.random()*12}%)`,
+      bottom:'26px', left:(rx+4+Math.random()*40)+'px',
+      pointerEvents:'none', zIndex:10
+    });
+    scene.appendChild(p);
+    p.animate([
+      {opacity:1,transform:'translate(0,0) rotate(0deg)'},
+      {opacity:0,transform:`translate(${-(8+Math.random()*22)}px,${-(10+Math.random()*18)}px) rotate(${Math.random()*180}deg)`}
+    ],{duration:280+Math.random()*180,easing:'ease-out',delay:i*35})
+    .onfinish=()=>p.remove();
+  }
+}
+
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+cv.width=480; cv.height=100;
+
+function drawCurve(cur){
+  const W=cv.width,H=cv.height;
+  const pl=32,pr=8,pt=8,pb=22;
+  const w=W-pl-pr,h=H-pt-pb;
+
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0d0d14'; ctx.fillRect(0,0,W,H);
+
+  const ox1=pl+(8/100)*w,ox2=pl+(15/100)*w;
+  ctx.fillStyle='rgba(57,255,20,0.07)'; ctx.fillRect(ox1,pt,ox2-ox1,h);
+  ctx.strokeStyle='rgba(57,255,20,0.3)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+  [ox1,ox2].forEach(x=>{ctx.beginPath();ctx.moveTo(x,pt);ctx.lineTo(x,pt+h);ctx.stroke();});
+  ctx.setLineDash([]);
+
+  ctx.strokeStyle='#1e1e2e'; ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pl,pt);ctx.lineTo(pl,pt+h);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(pl,pt+h);ctx.lineTo(pl+w,pt+h);ctx.stroke();
+
+  ctx.fillStyle='#555577'; ctx.font='8px Space Mono,monospace';
+  ctx.fillText('0%',pl-2,pt+h+12);
+  ctx.fillText('50%',pl+w*.5-8,pt+h+12);
+  ctx.fillText('100%',pl+w-14,pt+h+12);
+  ctx.fillText('N',pl-18,pt+7);
+
+  [['firm','#00e5ff'],['soft','#ff6b35']].forEach(([s,col])=>{
+    ctx.beginPath(); ctx.strokeStyle=col; ctx.lineWidth=2;
+    for(let i=0;i<=100;i++){
+      const f=getTraction(i,s);
+      const x=pl+(i/100)*w,y=pt+h-(f/12)*h;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  });
+
+  if(cur!==undefined){
+    const sx=pl+(cur/100)*w;
+    const sf=getTraction(cur,soil);
+    const sy=pt+h-(sf/12)*h;
+    const dc=soil==='firm'?'#00e5ff':'#ff6b35';
+    ctx.strokeStyle=dc; ctx.lineWidth=1; ctx.setLineDash([2,3]);
+    ctx.beginPath();ctx.moveTo(sx,pt+h);ctx.lineTo(sx,sy);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(sx,sy,5,0,Math.PI*2);ctx.fillStyle=dc;ctx.fill();
+    ctx.fillStyle=dc; ctx.font='bold 8px Space Mono,monospace';
+    ctx.fillText(sf.toFixed(1)+'N',Math.min(sx+7,pl+w-26),Math.max(sy-4,pt+9));
+  }
+}
+
+window.setSoil=s=>{
+  soil=s;
+  ground.className='ground '+s;
+  document.getElementById('bF').className='btn'+(s==='firm'?' active':'');
+  document.getElementById('bS').className='btn'+(s==='soft'?' active':'');
+};
+
+drawCurve(0);
+p1update();
+
+/* ══════════════════════════════════════
+   PAGE 2 — VISUAL OBSERVER CANVAS
+══════════════════════════════════════ */
+let slipMode = false;
+let p2raf = null;
+let p2running = false;
+
+// animation state — each signal packet travels along wires
+let packets = [];   // {x,y,tx,ty,col,progress,wire}
+let wireProgress = [0,0,0,0]; // 0=motor-to-ammeter, 1=ammeter-to-obs, 2=obs-to-ctrl, 3=ctrl-to-motor
+let motorAngle = 0;
+let needleAngle = 0;   // ammeter needle target
+let needleCurrent = 0; // smoothed
+let rotorFlash = 0;
+let ctrlPulse = 0;
+let activeWires = [];  // which wires are lit
+
+const p2cv  = document.getElementById('p2canvas');
+const p2ctx = p2cv.getContext('2d');
+
+// layout constants — computed at draw time from canvas pixel size
+function layout(W,H){
+  const cx = W/2;
+  return {
+    // DC Motor box (top centre)
+    motor:    {x:cx,    y:H*0.13, w:W*0.38, h:H*0.13, label:'DC MOTOR'},
+    // Wheel (right of motor)
+    wheel:    {x:W*0.82, y:H*0.13},
+    // Ammeter / Observer (left)
+    ammeter:  {x:W*0.18, y:H*0.47, w:W*0.28, h:H*0.18, label:'AMMETER\n/ OBSERVER'},
+    // Controller (right)
+    ctrl:     {x:W*0.82, y:H*0.47, w:W*0.28, h:H*0.18, label:'CONTROLLER'},
+    // Robot output (bottom centre)
+    robot2:   {x:cx,    y:H*0.83, w:W*0.38, h:H*0.10, label:'ROBOT'},
+  };
+}
+
+function p2start(){
+  if(p2running) return;
+  p2running=true;
+  p2cv.width  = p2cv.offsetWidth  * devicePixelRatio;
+  p2cv.height = p2cv.offsetHeight * devicePixelRatio;
+  p2ctx.scale(devicePixelRatio, devicePixelRatio);
+  p2loop();
+}
+
+function p2loop(){
+  const W = p2cv.width  / devicePixelRatio;
+  const H = p2cv.height / devicePixelRatio;
+  const L = layout(W,H);
+
+  p2ctx.clearRect(0,0,W,H);
+  p2ctx.fillStyle='#0d0d14';
+  p2ctx.fillRect(0,0,W,H);
+
+  // colors
+  const C = slipMode ? '#ff6b35' : '#00e5ff';
+  const GOOD = '#39ff14';
+
+  // ── advance animation state ──
+  motorAngle += slipMode ? 0.12 : 0.045;  // motor spins faster when slipping
+
+  // needle target: high current = no slip (needle right), low current = slip (needle left)
+  const needleTarget = slipMode ? -0.55 : 0.3; // radians from 12 o'clock
+  needleCurrent += (needleTarget - needleCurrent) * 0.05;
+
+  // controller pulse when slip mode
+  if(slipMode) ctrlPulse = (Math.sin(Date.now()/300)+1)/2;
+  else ctrlPulse *= 0.9;
+
+  // ── WIRES ──
+  // Wire 1: motor → ammeter  (left diagonal down)
+  // Wire 2: ammeter → controller  (horizontal bottom)
+  // Wire 3: controller → motor  (right diagonal up, feedback)
+  // Wire 4: motor → wheel  (right short)
+
+  const mx = L.motor.x, my = L.motor.y;
+  const ax = L.ammeter.x, ay = L.ammeter.y;
+  const cx2 = L.ctrl.x, cy2 = L.ctrl.y;
+  const rx = L.robot2.x, ry = L.robot2.y;
+  const wx = L.wheel.x, wy = L.wheel.y;
+
+  // wire definitions [x1,y1,x2,y2, label, color]
+  const wires = [
+    [mx-L.motor.w*0.5, my, ax, ay-L.ammeter.h*0.5, 'I (current)', slipMode?'#ff6b35':'#00e5ff'],
+    [ax, ay+L.ammeter.h*0.5, rx-L.robot2.w*0.5, ry, 'Sc (correction)', slipMode?GOOD:'#00e5ff'],
+    [rx+L.robot2.w*0.5, ry, cx2, cy2+L.ctrl.h*0.5, 'v (speed)', '#00e5ff'],
+    [cx2, cy2-L.ctrl.h*0.5, mx+L.motor.w*0.5, my, slipMode?'Δτ reduce':'Δτ = 0', slipMode?GOOD:'#555577'],
+  ];
+
+  wires.forEach(([x1,y1,x2,y2,lbl,col],i)=>{
+    // wire line
+    p2ctx.beginPath();
+    p2ctx.strokeStyle = col+'44';
+    p2ctx.lineWidth = 2.5;
+    p2ctx.setLineDash([]);
+    p2ctx.moveTo(x1,y1); p2ctx.lineTo(x2,y2); p2ctx.stroke();
+
+    // animated packet along wire
+    const t = ((Date.now()/900) + i*0.25) % 1;
+    const px = x1+(x2-x1)*t;
+    const py = y1+(y2-y1)*t;
+    p2ctx.beginPath();
+    p2ctx.arc(px,py,4,0,Math.PI*2);
+    p2ctx.fillStyle = col;
+    p2ctx.shadowColor = col;
+    p2ctx.shadowBlur = 8;
+    p2ctx.fill();
+    p2ctx.shadowBlur = 0;
+
+    // wire label midpoint
+    const lx=(x1+x2)/2, ly=(y1+y2)/2;
+    p2ctx.fillStyle=col;
+    p2ctx.font=`bold ${W*0.025}px Space Mono, monospace`;
+    p2ctx.textAlign='center';
+    p2ctx.fillText(lbl, lx, ly-6);
+  });
+
+  // ── DC MOTOR BOX ──
+  drawBox(p2ctx, mx, my, L.motor.w, L.motor.h, C, 'DC MOTOR', W);
+  // spinning rotor inside
+  drawRotor(p2ctx, mx, my, W*0.055, motorAngle, C);
+
+  // ── WHEEL ──
+  drawWheel(p2ctx, wx, wy, W*0.072, motorAngle * (slipMode?2.2:1), slipMode, W);
+
+  // ── AMMETER / OBSERVER ──
+  drawAmmeter(p2ctx, ax, ay, L.ammeter.w, L.ammeter.h, needleCurrent, slipMode, W);
+
+  // ── CONTROLLER ──
+  drawController(p2ctx, cx2, cy2, L.ctrl.w, L.ctrl.h, ctrlPulse, slipMode, C, W);
+
+  // ── ROBOT OUTPUT ──
+  drawRobotBox(p2ctx, rx, ry, L.robot2.w, L.robot2.h, slipMode, W);
+
+  // ── CAPTION update ──
+  const cap = document.getElementById('p2caption');
+  if(slipMode){
+    cap.style.color='#ff6b35';
+    cap.textContent='⚠ SLIP — Motor spins freely · Current drops · Observer detects · Controller reduces torque';
+  } else {
+    cap.style.color='#39ff14';
+    cap.textContent='✓ NO SLIP — Current stable · Observer silent · No correction needed';
+  }
+
+  p2raf = requestAnimationFrame(p2loop);
+}
+
+function drawBox(ctx,x,y,w,h,col,label,W){
+  ctx.save();
+  ctx.strokeStyle=col;
+  ctx.lineWidth=2;
+  ctx.fillStyle=col+'15';
+  ctx.beginPath();
+  ctx.roundRect(x-w/2, y-h/2, w, h, 8);
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle=col;
+  ctx.font=`bold ${W*0.028}px Space Mono,monospace`;
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText(label, x, y);
+  ctx.restore();
+}
+
+function drawRotor(ctx,x,y,r,angle,col){
+  ctx.save();
+  ctx.translate(x+r*1.8, y);
+  // outer ring
+  ctx.beginPath();
+  ctx.arc(0,0,r,0,Math.PI*2);
+  ctx.strokeStyle=col+'66';
+  ctx.lineWidth=2;
+  ctx.stroke();
+  // 3 spokes
+  for(let i=0;i<3;i++){
+    const a=angle+i*(Math.PI*2/3);
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r);
+    ctx.strokeStyle=col;
+    ctx.lineWidth=2;
+    ctx.stroke();
+  }
+  // centre dot
+  ctx.beginPath();
+  ctx.arc(0,0,3,0,Math.PI*2);
+  ctx.fillStyle=col;
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawWheel(ctx,x,y,r,angle,slipping,W){
+  ctx.save();
+  ctx.translate(x,y);
+  // tyre
+  ctx.beginPath();
+  ctx.arc(0,0,r,0,Math.PI*2);
+  ctx.strokeStyle = slipping ? '#ff6b35' : '#555577';
+  ctx.lineWidth=4;
+  ctx.stroke();
+  // spokes
+  for(let i=0;i<4;i++){
+    const a=angle+i*(Math.PI/2);
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a)*r*0.2, Math.sin(a)*r*0.2);
+    ctx.lineTo(Math.cos(a)*r*0.85, Math.sin(a)*r*0.85);
+    ctx.strokeStyle= slipping ? '#ff6b35' : '#00e5ff';
+    ctx.lineWidth=2;
+    ctx.stroke();
+  }
+  // hub
+  ctx.beginPath();
+  ctx.arc(0,0,r*0.2,0,Math.PI*2);
+  ctx.fillStyle= slipping ? '#ff6b35' : '#00e5ff';
+  ctx.fill();
+  // label
+  ctx.fillStyle=slipping?'#ff6b35':'#555577';
+  ctx.font=`${W*0.022}px Space Mono,monospace`;
+  ctx.textAlign='center';
+  ctx.fillText('WHEEL', 0, r+W*0.032);
+  ctx.restore();
+}
+
+function drawAmmeter(ctx,x,y,w,h,needle,slipping,W){
+  ctx.save();
+  // box
+  ctx.strokeStyle = slipping ? '#ff6b35' : '#00e5ff';
+  ctx.lineWidth=2;
+  ctx.fillStyle = (slipping?'#ff6b35':'#00e5ff')+'15';
+  ctx.beginPath();
+  ctx.roundRect(x-w/2,y-h/2,w,h,8);
+  ctx.fill(); ctx.stroke();
+
+  // gauge arc
+  const gr=w*0.28, gx=x, gy=y+h*0.05;
+  ctx.beginPath();
+  ctx.arc(gx,gy,gr,Math.PI,Math.PI*2,false);
+  ctx.strokeStyle='#1e1e2e';
+  ctx.lineWidth=3;
+  ctx.stroke();
+
+  // coloured zones on gauge
+  // green zone (right = high current = no slip)
+  ctx.beginPath();
+  ctx.arc(gx,gy,gr,Math.PI*1.5,Math.PI*2,false);
+  ctx.strokeStyle='#39ff1444';
+  ctx.lineWidth=5; ctx.stroke();
+  // red zone (left = low current = slip)
+  ctx.beginPath();
+  ctx.arc(gx,gy,gr,Math.PI,Math.PI*1.35,false);
+  ctx.strokeStyle='#ff6b3544';
+  ctx.lineWidth=5; ctx.stroke();
+
+  // needle
+  const na = Math.PI*1.5 + needle*Math.PI*0.45; // maps needle -0.55..0.3 to gauge
+  ctx.beginPath();
+  ctx.moveTo(gx,gy);
+  ctx.lineTo(gx+Math.cos(na)*gr*0.85, gy+Math.sin(na)*gr*0.85);
+  ctx.strokeStyle = slipping ? '#ff6b35' : '#39ff14';
+  ctx.lineWidth=2.5;
+  ctx.shadowColor = slipping ? '#ff6b35' : '#39ff14';
+  ctx.shadowBlur=6;
+  ctx.stroke();
+  ctx.shadowBlur=0;
+  // pivot
+  ctx.beginPath();
+  ctx.arc(gx,gy,4,0,Math.PI*2);
+  ctx.fillStyle='#e0e0f0'; ctx.fill();
+
+  // label
+  const col = slipping?'#ff6b35':'#00e5ff';
+  ctx.fillStyle=col;
+  ctx.font=`bold ${W*0.026}px Space Mono,monospace`;
+  ctx.textAlign='center';
+  ctx.fillText('OBSERVER', x, y+h*0.38);
+  ctx.font=`${W*0.02}px Space Mono,monospace`;
+  ctx.fillStyle=slipping?'#ff6b35':'#555577';
+  ctx.fillText(slipping?'I < I_slip ⚠':'I > I_slip ✓', x, y+h*0.55);
+  ctx.restore();
+}
+
+function drawController(ctx,x,y,w,h,pulse,slipping,col,W){
+  ctx.save();
+  const glow = slipping ? '#39ff14' : '#555577';
+  ctx.strokeStyle=glow;
+  ctx.lineWidth=2;
+  ctx.fillStyle=glow+'15';
+  ctx.beginPath();
+  ctx.roundRect(x-w/2,y-h/2,w,h,8);
+  ctx.fill(); ctx.stroke();
+
+  // pulsing dot when active
+  if(slipping){
+    ctx.beginPath();
+    ctx.arc(x, y-h*0.1, 5+pulse*4, 0, Math.PI*2);
+    ctx.fillStyle=`rgba(57,255,20,${0.4+pulse*0.5})`;
+    ctx.shadowColor='#39ff14';
+    ctx.shadowBlur=8+pulse*6;
+    ctx.fill();
+    ctx.shadowBlur=0;
+  }
+
+  ctx.fillStyle= slipping?'#39ff14':'#555577';
+  ctx.font=`bold ${W*0.026}px Space Mono,monospace`;
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText('CONTROLLER', x, y+h*0.12);
+  ctx.font=`${W*0.02}px Space Mono,monospace`;
+  ctx.fillText(slipping?'τ ↓ reduce':'Δτ = 0', x, y+h*0.42);
+  ctx.restore();
+}
+
+function drawRobotBox(ctx,x,y,w,h,slipping,W){
+  ctx.save();
+  const col = slipping ? '#ff6b35' : '#39ff14';
+  ctx.strokeStyle=col;
+  ctx.lineWidth=2;
+  ctx.fillStyle=col+'15';
+  ctx.beginPath();
+  ctx.roundRect(x-w/2,y-h/2,w,h,8);
+  ctx.fill(); ctx.stroke();
+
+  ctx.fillStyle=col;
+  ctx.font=`bold ${W*0.026}px Space Mono,monospace`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(slipping?'vc = vr − Sc':'vc = vr  ✓', x, y-h*0.1);
+  ctx.font=`${W*0.02}px Space Mono,monospace`;
+  ctx.fillStyle='#555577';
+  ctx.fillText(slipping?'corrected velocity':'nominal velocity', x, y+h*0.22);
+  ctx.restore();
+}
+
+window.setSlipMode=function(mode){
+  slipMode=mode;
+  document.getElementById('btnNoSlip').className='btn'+(mode===false?' active':'');
+  document.getElementById('btnSlip').className  ='btn'+(mode===true?' warn-active':'');
+};
+
+window.p2start = p2start;
+</script>
+</body>
+</html>
