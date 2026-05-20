@@ -348,13 +348,9 @@ footer {
 <header>
   <div>
     <div class="h-title">Wheel Slip<br>Simulator</div>
-    <div class="h-sub">Janosi-Hanamoto wheel–soil interaction model</div>
+
   </div>
-  <div class="h-right">
-    TER · UNIVERSITÉ LYON 1<br>
-    TAWAKOL & BAROUDI HANSALI<br>
-    SUPERVISOR: A.F. SHAKIL
-  </div>
+
 </header>
 
 <div class="card">
@@ -429,7 +425,7 @@ footer {
         </div>
       </div>
       <div class="graph-wrap">
-        <canvas id="cv" height="200"></canvas>
+        <canvas id="cv" height="280"></canvas>
       </div>
     </div>
 
@@ -456,10 +452,7 @@ footer {
   </div>
 </div>
 
-<footer>
-  <span>Janosi-Hanamoto shear model · Ojeda et al. 2006</span>
-  <span>2025</span>
-</footer>
+
 
 <script>
 let soil = 'firm', torque = 10, robotX = 44;
@@ -663,7 +656,7 @@ function spawnDust(slip) {
 /* ── GRAPH ── */
 const cv  = document.getElementById('cv');
 const ctx = cv.getContext('2d');
-cv.width = 900; cv.height = 200;
+cv.width = 900; cv.height = 280;
 
 function drawCurve(cur) {
   const W = cv.width, H = cv.height;
