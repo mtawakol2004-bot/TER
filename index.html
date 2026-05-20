@@ -29,10 +29,10 @@
 
 /* ── OPTIMAL STATE — deep saturated greens ── */
 body.state-good {
-  --s-bg:         #b0d8c0;
-  --s-surface:    #c4e8d4;
-  --s-card:       #b8e0ca;
-  --s-border:     #70b090;
+  --s-bg:         #eaf7ef;
+  --s-surface:    #f5fdf8;
+  --s-card:       #eef9f3;
+  --s-border:     #a8d8b8;
   --s-hi:         #084a22;
   --s-scene-sky1: #90c8a8;
   --s-scene-sky2: #78b490;
@@ -281,13 +281,13 @@ body.state-warn .opt-lbl { color:#6ab888; }
   font-size:0.62rem; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase;
   transition:color 0.4s;
 }
-.graph-legend { display:flex; gap:1rem; align-items:center; }
+.graph-legend { display:flex; gap:2rem; align-items:center; }
 .legend-item {
-  display:flex; align-items:center; gap:5px;
-  font-family:'JetBrains Mono', monospace; font-size:0.6rem; color:var(--sub);
+  display:flex; align-items:center; gap:6px;
+  font-family:'JetBrains Mono', monospace; font-size:0.72rem; font-weight:700; color:var(--ink);
   transition:color 0.4s;
 }
-.legend-dot { width:18px; height:2.5px; border-radius:2px; }
+.legend-dot { width:28px; height:4px; border-radius:2px; }
 .graph-wrap {
   border:1px solid var(--s-border); border-radius:6px; overflow:hidden;
   transition:border-color 0.55s;
@@ -421,10 +421,10 @@ footer {
         <span class="graph-title">F(s) — Traction vs Slip</span>
         <div class="graph-legend">
           <div class="legend-item">
-            <div class="legend-dot" id="lgFirm" style="background:#2a5cf5"></div> Firm
+            <div class="legend-dot" id="lgFirm"></div> <span id="lgFirmTxt">Firm</span>
           </div>
           <div class="legend-item">
-            <div class="legend-dot" id="lgSoft" style="background:#c07a30"></div> Soft
+            <div class="legend-dot" id="lgSoft"></div> <span id="lgSoftTxt">Soft</span>
           </div>
         </div>
       </div>
@@ -665,10 +665,6 @@ const cv  = document.getElementById('cv');
 const ctx = cv.getContext('2d');
 cv.width = 720; cv.height = 130;
 
-/* graph curve colours — fixed regardless of state for legibility */
-const C_FIRM = '#2a5cf5';
-const C_SOFT = '#c07a30';
-
 function drawCurve(cur) {
   const W = cv.width, H = cv.height;
   const pl = 46, pr = 44, pt = 14, pb = 26;
@@ -677,10 +673,24 @@ function drawCurve(cur) {
 
   /* background matches current card bg */
   const st = lastState || 'weak';
-  const bgMap  = { weak:'#faf6ee', good:'#c0e4d0', warn:'#08091a' };
+  /* curve + legend colours per state */
+  const curveColors = {
+    weak: { firm:'#8a3a00', soft:'#e8c040' },  /* dark burnt / bright gold */
+    good: { firm:'#021a08', soft:'#1aaa50' },  /* near-black green / bright lime */
+    warn: { firm:'#e82020', soft:'#f5d000' },  /* red firm / yellow soft */
+  };
+  const cc = curveColors[st] || curveColors.weak;
+
+  const bgMap  = { weak:'#faf6ee', good:'#f4fdf7', warn:'#08091a' };
   const gridMap = { weak:'#ece6d4', good:'#88c0a0', warn:'#141628' };
   const axisMap = { weak:'#d8cca8', good:'#60a878', warn:'#20223a' };
   const lblMap  = { weak:'#7a6030', good:'#0a5228', warn:'#a07070' };
+
+  /* update legend dots */
+  const lgF = document.getElementById('lgFirm');
+  const lgS = document.getElementById('lgSoft');
+  if (lgF) { lgF.style.background = cc.firm; lgF.style.opacity=1; }
+  if (lgS) { lgS.style.background = cc.soft; lgS.style.opacity=1; }
 
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = bgMap[st]; ctx.fillRect(0, 0, W, H);
@@ -730,7 +740,7 @@ function drawCurve(cur) {
   ctx.save(); ctx.translate(10,pt+h/2); ctx.rotate(-Math.PI/2); ctx.fillText('F  (N)',0,0); ctx.restore();
 
   /* curves */
-  [[' firm', C_FIRM,'Firm'],['soft', C_SOFT,'Soft']].forEach(([s,col,lbl])=>{
+  [['firm', cc.firm,'Firm'],['soft', cc.soft,'Soft']].forEach(([s,col,lbl])=>{
     const sm = s.trim();
     ctx.beginPath(); ctx.moveTo(pl,pt+h);
     for(let i=0;i<=100;i++) ctx.lineTo(pl+(i/100)*w, pt+h-(getTraction(i,sm)/yMax)*h);
@@ -754,7 +764,7 @@ function drawCurve(cur) {
     const sx=pl+(cur/100)*w;
     const sf=getTraction(cur,soil);
     const sy=pt+h-(sf/yMax)*h;
-    const dc=soil==='firm'?C_FIRM:C_SOFT;
+    const dc=soil==='firm'?cc.firm:cc.soft;
 
     ctx.beginPath();ctx.moveTo(pl,sy);ctx.lineTo(sx,sy);
     ctx.strokeStyle=dc+'45';ctx.lineWidth=1;ctx.setLineDash([2,3]);ctx.stroke();
