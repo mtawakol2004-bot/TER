@@ -429,7 +429,7 @@ footer {
         </div>
       </div>
       <div class="graph-wrap">
-        <canvas id="cv" height="130"></canvas>
+        <canvas id="cv" height="200"></canvas>
       </div>
     </div>
 
@@ -663,11 +663,11 @@ function spawnDust(slip) {
 /* ── GRAPH ── */
 const cv  = document.getElementById('cv');
 const ctx = cv.getContext('2d');
-cv.width = 720; cv.height = 130;
+cv.width = 900; cv.height = 200;
 
 function drawCurve(cur) {
   const W = cv.width, H = cv.height;
-  const pl = 46, pr = 44, pt = 14, pb = 26;
+  const pl = 50, pr = 48, pt = 16, pb = 30;
   const w = W - pl - pr, h = H - pt - pb;
   const yMax = 12;
 
@@ -710,7 +710,7 @@ function drawCurve(cur) {
   ctx.strokeStyle='rgba(26,122,69,0.3)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
   [ox1,ox2].forEach(x=>{ctx.beginPath();ctx.moveTo(x,pt);ctx.lineTo(x,pt+h);ctx.stroke();});
   ctx.setLineDash([]);
-  ctx.fillStyle='rgba(26,122,69,0.55)'; ctx.font='bold 8.5px JetBrains Mono,monospace'; ctx.textAlign='center';
+  ctx.fillStyle='rgba(26,122,69,0.55)'; ctx.font='bold 10px JetBrains Mono,monospace'; ctx.textAlign='center';
   ctx.fillText('OPT', ox1+(ox2-ox1)/2, pt+10);
 
   /* axes */
@@ -719,7 +719,7 @@ function drawCurve(cur) {
   ctx.beginPath(); ctx.moveTo(pl,pt+h); ctx.lineTo(pl+w,pt+h); ctx.stroke();
 
   /* x labels */
-  ctx.fillStyle = lblMap[st]; ctx.font='9.5px JetBrains Mono,monospace'; ctx.textAlign='center';
+  ctx.fillStyle = lblMap[st]; ctx.font='11px JetBrains Mono,monospace'; ctx.textAlign='center';
   [0,25,50,75,100].forEach(v=>{
     const x=pl+(v/100)*w;
     ctx.beginPath();ctx.moveTo(x,pt+h);ctx.lineTo(x,pt+h+4);ctx.strokeStyle=axisMap[st];ctx.lineWidth=1;ctx.stroke();
@@ -731,11 +731,11 @@ function drawCurve(cur) {
   [0,3,6,9,12].forEach(v=>{
     const y=pt+h-(v/yMax)*h;
     ctx.beginPath();ctx.moveTo(pl-3,y);ctx.lineTo(pl,y);ctx.strokeStyle=axisMap[st];ctx.stroke();
-    ctx.fillStyle=lblMap[st]; ctx.font='9.5px JetBrains Mono,monospace'; ctx.fillText(v,pl-6,y+3);
+    ctx.fillStyle=lblMap[st]; ctx.font='11px JetBrains Mono,monospace'; ctx.fillText(v,pl-6,y+3);
   });
 
   /* axis titles */
-  ctx.fillStyle=lblMap[st]; ctx.font='9px JetBrains Mono,monospace'; ctx.textAlign='center';
+  ctx.fillStyle=lblMap[st]; ctx.font='11px JetBrains Mono,monospace'; ctx.textAlign='center';
   ctx.fillText('slip  s  (%)', pl+w/2, H-2);
   ctx.save(); ctx.translate(10,pt+h/2); ctx.rotate(-Math.PI/2); ctx.fillText('F  (N)',0,0); ctx.restore();
 
@@ -755,7 +755,7 @@ function drawCurve(cur) {
     ctx.stroke();
 
     const ef=getTraction(100,sm), ey=pt+h-(ef/yMax)*h;
-    ctx.fillStyle=col; ctx.font='bold 9px JetBrains Mono,monospace'; ctx.textAlign='left';
+    ctx.fillStyle=col; ctx.font='bold 11px JetBrains Mono,monospace'; ctx.textAlign='left';
     ctx.fillText(lbl, pl+w+5, ey+3);
   });
 
@@ -780,7 +780,7 @@ function drawCurve(cur) {
 
     const onRight=sx<pl+w*0.72;
     ctx.textAlign=onRight?'left':'right';
-    ctx.fillStyle=dc; ctx.font='bold 10px JetBrains Mono,monospace';
+    ctx.fillStyle=dc; ctx.font='bold 12px JetBrains Mono,monospace';
     ctx.fillText(sf.toFixed(1)+' N', onRight?sx+12:sx-12, Math.max(sy-5,pt+12));
   }
 }
