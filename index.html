@@ -10,7 +10,7 @@
    THREE-STATE THEME SYSTEM
    weak  → warm neutral (cream/sand)
    good  → forest green
-   warn  → deep navy + amber/orange
+   warn  → deep navy + red
 ══════════════════════════════════════ */
 :root {
   --s-bg:         #f5f0e8;
@@ -25,7 +25,6 @@
   --sub:          #4a3810;
   --muted:        #7a6030;
 }
-
 body.state-good {
   --s-bg:         #eaf7ef;
   --s-surface:    #f5fdf8;
@@ -39,7 +38,6 @@ body.state-good {
   --sub:          #083818;
   --muted:        #186030;
 }
-
 body.state-warn {
   --s-bg:         #04050c;
   --s-surface:    #08091a;
@@ -55,13 +53,12 @@ body.state-warn {
 }
 
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-
 html { background:var(--s-bg); transition:background 0.55s ease; }
 body {
   background:var(--s-bg); color:var(--ink);
   font-family:'Inter', sans-serif;
   min-height:100vh;
-  display:grid; grid-template-rows:auto 1fr auto;
+  display:grid; grid-template-rows:auto auto 1fr auto;
   align-items:start; justify-items:center;
   padding:0 1rem 3rem;
   transition:background 0.55s ease, color 0.35s ease;
@@ -73,7 +70,7 @@ header {
   padding:2.2rem 0 1.6rem;
   display:flex; justify-content:space-between; align-items:flex-end;
   border-bottom:1px solid var(--s-border);
-  margin-bottom:2rem;
+  margin-bottom:0;
   transition:border-color 0.5s;
 }
 .h-title {
@@ -87,9 +84,45 @@ header {
   font-size:0.75rem; color:var(--sub); letter-spacing:0.01em; transition:color 0.4s;
 }
 
+/* ══ TAB NAV ══ */
+.tab-nav {
+  width:100%; max-width:720px;
+  display:flex; gap:0; margin-bottom:2rem;
+  border-bottom:1px solid var(--s-border);
+  transition:border-color 0.5s;
+}
+.tab-btn {
+  padding:0.9rem 1.6rem;
+  font-family:'JetBrains Mono', monospace;
+  font-size:0.62rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+  border:none; background:none; cursor:pointer;
+  color:var(--muted); border-bottom:2px solid transparent;
+  margin-bottom:-1px; transition:all 0.25s;
+  position:relative;
+}
+.tab-btn:hover { color:var(--ink); }
+.tab-btn.active {
+  color:var(--s-hi);
+  border-bottom-color:var(--s-hi);
+}
+.tab-tag {
+  font-size:0.48rem; letter-spacing:0.1em;
+  padding:1px 5px; border-radius:2px;
+  background:var(--s-border); color:var(--muted);
+  margin-left:6px; vertical-align:middle;
+  transition:all 0.25s;
+}
+.tab-btn.active .tab-tag {
+  background:var(--s-hi); color:#fff;
+}
+
+/* ══ PAGE CONTAINERS ══ */
+.page { width:100%; max-width:720px; display:none; }
+.page.active { display:block; }
+
 /* ══ CARD ══ */
 .card {
-  width:100%; max-width:720px;
+  width:100%;
   background:var(--s-surface);
   border:1px solid var(--s-border);
   border-radius:12px; overflow:hidden;
@@ -101,7 +134,7 @@ body.state-warn .card {
 }
 
 /* ══ SCENE ══ */
-#scene {
+#scene, #scene2 {
   width:100%; height:120px; position:relative;
   overflow:hidden; border-bottom:1px solid var(--s-border);
   transition:border-color 0.55s;
@@ -140,8 +173,8 @@ body.state-warn .soil-badge { background:rgba(255,255,255,0.06); color:#c8a0a0; 
 .state-badge.good { background:rgba(8,74,34,0.18);   color:#084a22; border-color:rgba(8,74,34,0.35); }
 .state-badge.warn { background:rgba(224,32,32,0.18);  color:#e84040; border-color:rgba(224,32,32,0.4); }
 
-/* robot */
-#robotWrap { position:absolute; bottom:30px; z-index:10; }
+/* robot — shared */
+.r-wrap { position:absolute; bottom:30px; z-index:10; }
 .r-body {
   width:56px; height:30px;
   background:var(--s-surface); border:2px solid var(--ink); border-radius:4px;
@@ -156,7 +189,7 @@ body.state-warn .soil-badge { background:rgba(255,255,255,0.06); color:#c8a0a0; 
   content:''; position:absolute; top:-12px; left:18px;
   width:8px; height:3px; background:var(--ink); border-radius:1px; transition:background 0.35s;
 }
-#sensorDot {
+.r-sensor {
   position:absolute; top:7px; left:8px;
   width:8px; height:5px; border-radius:1px;
   transition:background 0.25s, box-shadow 0.25s;
@@ -182,12 +215,10 @@ body.state-warn .soil-badge { background:rgba(255,255,255,0.06); color:#c8a0a0; 
 .r-wheel.optimal   { border-color:#084a22; }
 .r-wheel.optimal .spoke { background:#084a22; }
 @keyframes wspin { to { transform:rotate(360deg); } }
-#dustLayer { position:absolute; inset:0; pointer-events:none; z-index:5; }
+.dust-layer { position:absolute; inset:0; pointer-events:none; z-index:5; }
 
 /* ══ BODY ══ */
 .body { padding:1.5rem 1.8rem; display:flex; flex-direction:column; gap:1.5rem; }
-
-
 
 /* ══ GRAPH ══ */
 .graph-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
@@ -205,6 +236,91 @@ body.state-warn .soil-badge { background:rgba(255,255,255,0.06); color:#c8a0a0; 
 .legend-dot { width:28px; height:4px; border-radius:2px; }
 .graph-wrap { border:1px solid var(--s-border); border-radius:6px; overflow:hidden; transition:border-color 0.55s; }
 canvas { width:100%; display:block; }
+
+/* ══ VELOCITY ROW (page 2) — compact, page-1 style ══ */
+.vel-row {
+  display:grid; grid-template-columns:1fr 1fr 1fr;
+  border:1px solid var(--s-border);
+  border-radius:8px; overflow:hidden;
+  transition:border-color 0.55s;
+}
+.vel-cell {
+  padding:0.65rem 1rem;
+  background:var(--s-card);
+  border-right:1px solid var(--s-border);
+  position:relative; overflow:hidden;
+  display:flex; flex-direction:column; gap:0.18rem;
+  transition:background 0.55s, border-color 0.55s;
+}
+.vel-cell:last-child { border-right:none; }
+.vel-cell::after {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:2px;
+}
+.vel-cell.venc::after  { background:#d4900a; }
+.vel-cell.vreal::after { background:#0a7830; }
+.vel-cell.vcorr::after { background:#2060e0; }
+/* page-1-matching: JetBrains Mono throughout, no Syne */
+.vel-label {
+  font-family:'JetBrains Mono', monospace;
+  font-size:0.48rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted);
+  transition:color 0.4s;
+}
+.vel-value {
+  font-family:'JetBrains Mono', monospace; font-weight:700;
+  font-size:1.05rem; line-height:1.15; transition:color 0.3s;
+}
+.vel-cell.venc  .vel-value { color:#d4900a; }
+.vel-cell.vreal .vel-value { color:#0a7830; }
+.vel-cell.vcorr .vel-value { color:#2060e0; }
+body.state-warn .vel-cell.venc  .vel-value { color:#e84040; }
+body.state-warn .vel-cell.vreal .vel-value { color:#40e060; }
+body.state-warn .vel-cell.vcorr .vel-value { color:#4080ff; }
+.vel-unit {
+  font-family:'JetBrains Mono', monospace;
+  font-size:0.48rem; color:var(--sub); transition:color 0.4s;
+}
+.vel-sublabel {
+  font-family:'JetBrains Mono', monospace;
+  font-size:0.45rem; color:var(--muted); font-style:italic; transition:color 0.4s;
+}
+.vel-badge {
+  font-family:'JetBrains Mono', monospace;
+  font-size:0.45rem; font-weight:700; letter-spacing:0.08em;
+  padding:2px 6px; border-radius:2px; margin-top:0.2rem;
+  display:inline-block; transition:all 0.25s;
+}
+.vel-badge.ok   { background:rgba(8,74,34,0.15); color:#084a22; border:1px solid rgba(8,74,34,0.3); }
+.vel-badge.bad  { background:rgba(224,32,32,0.15); color:#e02020; border:1px solid rgba(224,32,32,0.3); }
+body.state-warn .vel-badge.ok  { background:rgba(8,74,34,0.08); }
+body.state-warn .vel-badge.bad { background:rgba(224,32,32,0.18); }
+
+/* ══ ZONE BUTTONS (page 2) ══ */
+.zone-btns {
+  display:flex; gap:0.75rem;
+}
+.zone-btn {
+  flex:1; padding:0.75rem 1rem;
+  font-family:'JetBrains Mono', monospace;
+  font-size:0.6rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+  border-radius:6px; border:1.5px solid var(--s-border);
+  background:var(--s-surface); color:var(--sub);
+  cursor:pointer; transition:all 0.3s;
+  display:flex; flex-direction:column; gap:0.2rem; align-items:flex-start;
+}
+.zone-btn .zb-title { font-size:0.85rem; font-family:'Syne', sans-serif; font-weight:800; }
+.zone-btn .zb-range { font-size:0.55rem; opacity:0.75; }
+.zone-btn .zb-desc  { font-size:0.5rem; color:var(--muted); font-weight:400; transition:color 0.3s; }
+.zone-btn.z-active-A {
+  border-color:#084a22; background:rgba(8,74,34,0.10); color:#084a22;
+  box-shadow:0 0 0 3px rgba(8,74,34,0.12);
+}
+.zone-btn.z-active-B {
+  border-color:#e02020; background:rgba(224,32,32,0.10); color:#e02020;
+  box-shadow:0 0 0 3px rgba(224,32,32,0.12);
+}
+body.state-warn .zone-btn:not(.z-active-B) {
+  border-color:#1a1b2e; color:#a07070; background:var(--s-surface);
+}
 
 /* ══ OBSERVER STRIP ══ */
 .observer-wrap {
@@ -232,23 +348,15 @@ canvas { width:100%; display:block; }
 .obs-detection.slip     { background:rgba(224,32,32,0.15);  color:#e02020; border:1px solid rgba(224,32,32,0.35); }
 body.state-warn .obs-detection.no-slip { background:rgba(8,74,34,0.08); }
 body.state-warn .obs-detection.slip    { background:rgba(224,32,32,0.12); }
-
 .obs-body {
   padding:0.9rem 1.1rem 1rem;
   background:var(--s-surface);
   transition:background 0.55s;
 }
-
-/* mini canvas for current plot */
 .obs-canvas-wrap {
-  border:1px solid var(--s-border); border-radius:5px; overflow:hidden; margin-bottom:0.9rem;
+  border:1px solid var(--s-border); border-radius:5px; overflow:hidden;
   transition:border-color 0.55s;
 }
-#cvObs { width:100%; display:block; }
-
-/* observer metrics row */
-
-/* velocity comparison row */
 
 /* ══ CONTROLS ══ */
 .controls { display:flex; flex-direction:column; gap:1rem; }
@@ -275,7 +383,6 @@ input[type=range]::-webkit-slider-thumb {
   min-width:40px; text-align:right; color:var(--s-hi); transition:color 0.4s;
 }
 
-
 footer {
   width:100%; max-width:720px; margin-top:1.6rem;
   display:flex; justify-content:space-between;
@@ -289,288 +396,267 @@ footer {
 <header>
   <div>
     <div class="h-title">Wheel Slip<br>Simulator</div>
+    <div class="h-sub">TER — Tawakol · Hansali · Shakil · Lyon 1 · 2026</div>
   </div>
 </header>
 
+<!-- TAB NAV -->
+<nav class="tab-nav">
+  <button class="tab-btn active" id="tab1" onclick="switchTab(1)">
+    Slip Simulator <span class="tab-tag">PAGE 1</span>
+  </button>
+  <button class="tab-btn" id="tab2" onclick="switchTab(2)">
+    Velocity Correction <span class="tab-tag">PAGE 2</span>
+  </button>
+</nav>
+
+<!-- ══════════════════════════════════════
+     PAGE 1 — original slip simulator
+══════════════════════════════════════ -->
+<div class="page active" id="page1">
 <div class="card">
 
-  <!-- SCENE -->
   <div id="scene">
     <div class="scene-sky"></div>
-    <div class="ground firm" id="ground"></div>
-    <div class="state-badge weak" id="stateBadge">WEAK GRIP</div>
-    <div id="dustLayer"></div>
-    <div id="robotWrap">
+    <div class="ground firm" id="p1-ground"></div>
+    <div class="state-badge weak" id="p1-stateBadge">WEAK GRIP</div>
+    <div class="dust-layer" id="p1-dust"></div>
+    <div class="r-wrap" id="p1-robotWrap">
       <div class="r-body">
-        <div id="sensorDot"></div>
+        <div class="r-sensor" id="p1-sensor"></div>
       </div>
-      <div class="r-wheel wL spinning" id="wL"><div class="spoke"></div></div>
-      <div class="r-wheel wR spinning" id="wR"><div class="spoke"></div></div>
+      <div class="r-wheel wL spinning" id="p1-wL"><div class="spoke"></div></div>
+      <div class="r-wheel wR spinning" id="p1-wR"><div class="spoke"></div></div>
     </div>
   </div>
 
   <div class="body">
 
-
-    <!-- GRAPH -->
+    <!-- Graph -->
     <div>
       <div class="graph-header">
         <span class="graph-title">F(s) — Traction vs Slip</span>
         <div class="graph-legend">
           <div class="legend-item">
-            <div class="legend-dot" id="lgFirm"></div> <span>Firm soil</span>
+            <div class="legend-dot" id="p1-lgFirm"></div> <span>Firm soil</span>
           </div>
         </div>
       </div>
       <div class="graph-wrap">
-        <canvas id="cv" height="280"></canvas>
+        <canvas id="p1-cv" height="280"></canvas>
       </div>
     </div>
 
-    <!-- ══ OBSERVER STRIP ══ -->
+    <!-- Observer strip -->
     <div class="observer-wrap">
       <div class="obs-header">
         <span class="obs-title">Observer — I(t) · slip detection · correction</span>
-        <span class="obs-detection no-slip" id="obsDetection">NO SLIP</span>
+        <span class="obs-detection no-slip" id="p1-obsDetection">NO SLIP</span>
       </div>
       <div class="obs-body">
-
-        <!-- mini current plot -->
         <div class="obs-canvas-wrap">
-          <canvas id="cvObs" height="200"></canvas>
+          <canvas id="p1-cvObs" height="200"></canvas>
         </div>
-
-
-
       </div>
     </div>
 
-    <!-- CONTROLS -->
+    <!-- Controls -->
     <div class="controls">
       <div class="control-row">
         <span class="ctrl-label">Slip  s</span>
-        <input type="range" id="slider" min="0" max="100" value="0"
-               oninput="onSlip(+this.value)">
-        <span class="ctrl-val" id="tv">0%</span>
+        <input type="range" id="p1-slider" min="0" max="100" value="0"
+               oninput="p1_onSlip(+this.value)">
+        <span class="ctrl-val" id="p1-tv">0%</span>
       </div>
-
     </div>
 
   </div>
 </div>
+</div><!-- /page1 -->
+
+
+<!-- ══════════════════════════════════════
+     PAGE 2 — zone A / B velocity correction
+══════════════════════════════════════ -->
+<div class="page" id="page2">
+<div class="card">
+
+  <div id="scene2">
+    <div class="scene-sky"></div>
+    <div class="ground firm" id="p2-ground"></div>
+    <div class="state-badge good" id="p2-stateBadge">⚡ OPTIMAL</div>
+    <div class="dust-layer" id="p2-dust"></div>
+    <div class="r-wrap" id="p2-robotWrap">
+      <div class="r-body">
+        <div class="r-sensor" id="p2-sensor"></div>
+      </div>
+      <div class="r-wheel wL spinning" id="p2-wL"><div class="spoke"></div></div>
+      <div class="r-wheel wR spinning" id="p2-wR"><div class="spoke"></div></div>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- Zone buttons -->
+    <div>
+      <div class="graph-header" style="margin-bottom:0.75rem;">
+        <span class="graph-title">Select zone</span>
+      </div>
+      <div class="zone-btns">
+        <button class="zone-btn z-active-A" id="p2-btnA" onclick="p2_setZone('A')">
+          <span class="zb-title">Zone A</span>
+          <span class="zb-range">s = 8 – 15% · Optimal</span>
+          <span class="zb-desc">Peak traction · No slip detected</span>
+        </button>
+        <button class="zone-btn" id="p2-btnB" onclick="p2_setZone('B')">
+          <span class="zb-title">Zone B</span>
+          <span class="zb-range">s = 70% · Slipping</span>
+          <span class="zb-desc">I &gt; I_slip · Observer corrects v_enc</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- F(s) graph -->
+    <div>
+      <div class="graph-header">
+        <span class="graph-title">F(s) — Traction vs Slip</span>
+        <div class="graph-legend">
+          <div class="legend-item">
+            <div class="legend-dot" id="p2-lgFirm"></div> <span>Firm soil</span>
+          </div>
+        </div>
+      </div>
+      <div class="graph-wrap">
+        <canvas id="p2-cv" height="280"></canvas>
+      </div>
+    </div>
+
+    <!-- ★ VELOCITY ROW — between graph and observer -->
+    <div class="vel-row">
+      <div class="vel-cell venc">
+        <div class="vel-label">v_enc — encoder</div>
+        <div class="vel-value" id="p2-vEnc">—</div>
+        <div class="vel-unit">m / s</div>
+        <div class="vel-sublabel">wheel odometry (raw)</div>
+        <span class="vel-badge ok" id="p2-encBadge">ACCURATE</span>
+      </div>
+      <div class="vel-cell vreal">
+        <div class="vel-label">v_true — real speed</div>
+        <div class="vel-value" id="p2-vReal">—</div>
+        <div class="vel-unit">m / s</div>
+        <div class="vel-sublabel">F_t / b_damp (Janosi)</div>
+      </div>
+      <div class="vel-cell vcorr">
+        <div class="vel-label">v_corr — corrected</div>
+        <div class="vel-value" id="p2-vCorr">—</div>
+        <div class="vel-unit">m / s</div>
+        <div class="vel-sublabel">observer output</div>
+        <span class="vel-badge ok" id="p2-corrBadge">NO SLIP</span>
+      </div>
+    </div>
+
+    <!-- Observer strip — I(t) -->
+    <div class="observer-wrap">
+      <div class="obs-header">
+        <span class="obs-title">Observer — I(t) · slip detection · correction</span>
+        <span class="obs-detection no-slip" id="p2-obsDetection">NO SLIP</span>
+      </div>
+      <div class="obs-body">
+        <div class="obs-canvas-wrap">
+          <canvas id="p2-cvObs" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div><!-- /page2 -->
+
+<footer>
+  <span>TER — Tawakol · Hansali</span>
+  <span>Université Claude Bernard Lyon 1 · 2026</span>
+</footer>
 
 <script>
 /* ══════════════════════════════════════
-   PHYSICS CONSTANTS
+   SHARED PHYSICS
 ══════════════════════════════════════ */
-const W      = 20;      // normal force (N)
-const MU     = { firm: 0.5, soft: 0.25 };
-const S_OPT  = 0.10;    // 10% in fraction — peak location
+const W_FORCE = 20;
+const maxT    = { firm:10, soft:5 };
+const S_OPT   = 0.10;
 
-/* observer constants */
-const r_w    = 0.025;   // wheel radius (m)
-const kf     = 0.02;    // friction coeff
-const N_coil = 10;      // motor turns
-const Kt     = 0.05;    // torque constant (Nm/A)
-const I_slip = 0.1905;  // detection threshold — crosses exactly at s=16%
-const xi     = 0.15;    // correction gain — gentle, keeps v_corr meaningful
-
-/* max traction per soil */
-const maxT   = { firm: 10, soft: 5 };
-
-/* ── Traction curve: rises to peak at s_opt, then decays ──
-   F(s) = F_max · (s/15)                      for s ≤ 15%
-   F(s) = F_max · (0.2 + 0.8·exp(−(s−15)/20)) for s > 15%
-   This matches the original peaked Janosi shape used in the TER. */
 function janosi(sFrac, soilKey) {
-  const s   = sFrac * 100;          // convert to percentage
-  const max = maxT[soilKey];
+  const s = sFrac * 100;
+  const max = maxT[soilKey || 'firm'];
   if (s <= 0)  return 0;
   if (s <= 15) return max * (s / 15);
   return max * (0.2 + 0.8 * Math.exp(-(s - 15) / 20));
 }
 
-/* ── Observer ── */
-/* ω: firm=4 rad/s baseline; sand/slip zone = 28 rad/s */
-/* ── Correct motor physics ─────────────────────────────────────────────
-   The motor commands a wheel speed ω_nom (constant throttle).
-   As slip s increases the wheel spins faster: ω = ω_nom / (1−s).
-   Motor current: I = (Ft·r + kf·ω) / (N·Kt)  minus baseline at s=0.
-   → At s=0:  Ft=0, ω=ω_nom  → I=0  (subtracted as baseline)
-   → As s↑:   ω rises faster than Ft falls  → I rises monotonically ✓
-   → Robot actual speed: v = ω·r·(1−s) = ω_nom·r = constant (motor holds)
-   I_slip threshold crossed when extra wheel spin detected (~s=12%).       */
-const omega_nom = 10.0;   // nominal wheel speed at s=0 (rad/s)
-const omega_max = 80.0;   // cap to avoid s→1 singularity
-const kf_motor  = 0.05;   // motor friction coefficient (replaces old kf)
-const I_base    = kf_motor * omega_nom / (N_coil * Kt); // baseline subtracted so I(0)=0
+const r_w      = 0.025;
+const N_coil   = 10;
+const Kt       = 0.05;
+const kf_motor = 0.05;
+const omega_nom = 10.0;
+const omega_max = 80.0;
+const I_base   = kf_motor * omega_nom / (N_coil * Kt);
+const I_SLIP   = 0.1905;   // page 1 threshold (s=16%)
+const P2_I_SLIP = 0.4;     // page 2 threshold
+const P2_I_A    = 0.2;     // page 2 Zone A current
+const P2_I_B    = 0.6;     // page 2 Zone B current
+const xi       = 0.15;
+const b_damp   = 40.0;
 
-function getOmegaWheel(sFrac) {
-  /* wheel spins faster as slip increases — ω = ω_nom / (1−s) */
+function getOmega(sFrac) {
   const s = Math.min(sFrac, 0.98);
   return Math.min(omega_nom / (1 - s), omega_max);
 }
-function getCurrent(Ft, omega) {
-  /* I driven by motor spinning losses only: I = kf·ω / (N·Kt) − baseline
-     Removing Ft·r term eliminates the non-monotonic dip at s=16–24%.
-     kf·ω dominates and rises strictly with slip. I(s=0) = 0. */
+function getCurrent(omega) {
   return Math.max(0, (kf_motor * omega) / (N_coil * Kt) - I_base);
 }
-const b_damp = 40.0;  // viscous damping: v_robot = Ft/b_damp, peaks at 25cm/s at Ft=10N
+function getRobotSpeed(Ft) { return Ft / b_damp; }
 
-function getRobotSpeed(Ft) {
-  /* Robot speed from traction: v = Ft / b_damp
-     Peaks at optimal zone (Ft max), drops when slipping — matches Janosi curve */
-  return Ft / b_damp;  // m/s
+/* ══════════════════════════════════════
+   TAB SWITCH
+══════════════════════════════════════ */
+function switchTab(n) {
+  document.getElementById('page1').classList.toggle('active', n===1);
+  document.getElementById('page2').classList.toggle('active', n===2);
+  document.getElementById('tab1').classList.toggle('active', n===1);
+  document.getElementById('tab2').classList.toggle('active', n===2);
 }
 
 /* ══════════════════════════════════════
-   STATE
+   SHARED GRAPH DRAWING UTILS
 ══════════════════════════════════════ */
-let soil    = 'firm';  // locked — firm soil only
-let slipPct = 0;   // 0–100
-let robotX  = 44;
-
-/* ring buffer for observer mini-plot */
-const OBS_LEN = 120;
-const obsHistory = new Array(OBS_LEN).fill(0);
-let obsHead = 0;
-
-/* ══════════════════════════════════════
-   DOM REFS
-══════════════════════════════════════ */
-const body       = document.body;
-const scene      = document.getElementById('scene');
-const ground     = document.getElementById('ground');
-const stateBadge = document.getElementById('stateBadge');
-const robotWrap  = document.getElementById('robotWrap');
-const dustLayer  = document.getElementById('dustLayer');
-const wL         = document.getElementById('wL');
-const wR         = document.getElementById('wR');
-const sensor     = document.getElementById('sensorDot');
-const slider     = document.getElementById('slider');
-
-/* main graph */
-const cv  = document.getElementById('cv');
-const ctx = cv.getContext('2d');
-cv.width = 900; cv.height = 280;
-
-/* observer canvas */
-const cvObs  = document.getElementById('cvObs');
-const ctxObs = cvObs.getContext('2d');
-cvObs.width = 900; cvObs.height = 200;
-
-/* ══════════════════════════════════════
-   SLIDER → slip input
-══════════════════════════════════════ */
-function onSlip(v) {
-  slipPct = v;
-  document.getElementById('tv').textContent = v + '%';
-  slider.style.setProperty('--pct', v + '%');
-}
-onSlip(0);
-
-
-
-/* ══════════════════════════════════════
-   STATE COLOUR TOKENS
-══════════════════════════════════════ */
-const STATES = {
-  weak: {
-    bodyClass:'', col:'#b86e00',
-    slipCol:'#b86e00', speedCol:'#b86e00', tracCol:'#b86e00',
-    meterCol:'#d4900a', sensorBg:'#c07800', sensorShadow:'#c07800',
-    wClass:'spinning', statusTxt:'WEAK GRIP', badgeClass:'weak',
-  },
-  good: {
-    bodyClass:'state-good', col:'#084a22',
-    slipCol:'#084a22', speedCol:'#084a22', tracCol:'#084a22',
-    meterCol:'#0a5c28', sensorBg:'#0e7830', sensorShadow:'#0e7830',
-    wClass:'optimal', statusTxt:'⚡ OPTIMAL', badgeClass:'good',
-  },
-  warn: {
-    bodyClass:'state-warn', col:'#e84040',
-    slipCol:'#e84040', speedCol:'#ff6868', tracCol:'#ff8080',
-    meterCol:'#d42020', sensorBg:'#e02020', sensorShadow:'#e02020',
-    wClass:'slipping', statusTxt:'DIGGING ⚠', badgeClass:'warn',
-  },
-};
-let lastState = '';
-
-function applyState(st) {
-  const S = STATES[st];
-  if (st !== lastState) { body.className = S.bodyClass; lastState = st; }
-  stateBadge.textContent = S.statusTxt;
-  stateBadge.className   = 'state-badge ' + S.badgeClass;
+function getThemeColors(st) {
+  if (st === 'good') return {
+    bg:'#f4fdf7', grid:'#88c0a0', axis:'#60a878', lbl:'#0a5228',
+    curve:'#021a08', iline:'#0a7830',
+  };
+  if (st === 'warn') return {
+    bg:'#08091a', grid:'#141628', axis:'#20223a', lbl:'#a07070',
+    curve:'#e82020', iline:'#e02020',
+  };
+  return {
+    bg:'#faf6ee', grid:'#ece6d4', axis:'#d8cca8', lbl:'#7a6030',
+    curve:'#8a3a00', iline:'#0a7830',
+  };
 }
 
-/* ══════════════════════════════════════
-   DUST PARTICLES
-══════════════════════════════════════ */
-function spawnDust(slip) {
-  const slipFrac = Math.min((slip - 15) / 85, 1);
-  const n = Math.round(2 + slipFrac * 6);
-  const groundY = scene.offsetHeight - 28;
-  for (let i = 0; i < n; i++) {
-    const p = document.createElement('div');
-    const isFlake = Math.random() > 0.45;
-    const sz = isFlake
-      ? (1 + Math.random() * 2 + slipFrac * 2)
-      : (2 + Math.random() * 3 + slipFrac * 4);
-    const col = soil === 'firm'
-      ? `hsl(${28+Math.random()*16},${44+Math.random()*18}%,${40+Math.random()*14}%)`
-      : `hsl(${20+Math.random()*10},${34+Math.random()*16}%,${26+Math.random()*12}%)`;
-    const startX = robotX + 5 + Math.random() * 46;
-    const startY = groundY - 1 - Math.random() * 3;
-    const burstUp  = -(4 + Math.random() * 10);
-    const windLeft = -(25 + Math.random() * (scene.offsetWidth * 0.45));
-    const finalY   = burstUp + (Math.random() - 0.4) * 6;
-    Object.assign(p.style, {
-      position:'absolute', width:sz+'px',
-      height: isFlake ? (sz*0.35)+'px' : sz+'px',
-      borderRadius: isFlake ? '2px' : '50%',
-      background: col, left:startX+'px', top:startY+'px',
-      zIndex:4, pointerEvents:'none',
-    });
-    dustLayer.appendChild(p);
-    const dur = 700 + Math.random() * 600;
-    p.animate([
-      { opacity:0,   transform:'translate(0px, 0px)',                         offset:0    },
-      { opacity:0.8, transform:`translate(${windLeft*0.08}px,${burstUp}px)`,  offset:0.12 },
-      { opacity:0.6, transform:`translate(${windLeft*0.5}px,${finalY*0.7}px)`,offset:0.55 },
-      { opacity:0,   transform:`translate(${windLeft}px,${finalY}px)`,        offset:1    },
-    ], { duration:dur, easing:'ease-out', delay:i*60 }).onfinish = () => p.remove();
-  }
-}
-
-/* ══════════════════════════════════════
-   MAIN TRACTION GRAPH
-══════════════════════════════════════ */
-function drawCurve(cur) {
+function drawTractionCurve(cv, ctx, slipPctLive, soil, st, lgDotId) {
   const W2 = cv.width, H = cv.height;
   const pl=50, pr=48, pt=16, pb=30;
   const w=W2-pl-pr, h=H-pt-pb;
   const yMax=12;
-
-  const st = lastState || 'weak';
-  const curveColors = {
-    weak: { firm:'#8a3a00', soft:'#e8c040' },
-    good: { firm:'#021a08', soft:'#1aaa50' },
-    warn: { firm:'#e82020', soft:'#f5d000' },
-  };
-  const cc = curveColors[st] || curveColors.weak;
-  const bgMap   = { weak:'#faf6ee', good:'#f4fdf7', warn:'#08091a' };
-  const gridMap = { weak:'#ece6d4', good:'#88c0a0', warn:'#141628' };
-  const axisMap = { weak:'#d8cca8', good:'#60a878', warn:'#20223a' };
-  const lblMap  = { weak:'#7a6030', good:'#0a5228', warn:'#a07070' };
-
-
+  const C = getThemeColors(st);
+  const col = st==='warn' ? '#e82020' : st==='good' ? '#021a08' : '#8a3a00';
 
   ctx.clearRect(0,0,W2,H);
-  ctx.fillStyle=bgMap[st]; ctx.fillRect(0,0,W2,H);
+  ctx.fillStyle=C.bg; ctx.fillRect(0,0,W2,H);
 
   /* grid */
-  ctx.strokeStyle=gridMap[st]; ctx.lineWidth=1;
+  ctx.strokeStyle=C.grid; ctx.lineWidth=1;
   [0.25,0.5,0.75,1].forEach(f=>{
     ctx.beginPath(); ctx.moveTo(pl+f*w,pt); ctx.lineTo(pl+f*w,pt+h); ctx.stroke();
   });
@@ -588,17 +674,17 @@ function drawCurve(cur) {
   ctx.fillText('OPT',ox1+(ox2-ox1)/2,pt+10);
 
   /* axes */
-  ctx.strokeStyle=axisMap[st]; ctx.lineWidth=1;
+  ctx.strokeStyle=C.axis; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(pl,pt); ctx.lineTo(pl,pt+h); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(pl,pt+h); ctx.lineTo(pl+w,pt+h); ctx.stroke();
 
   /* x labels */
-  ctx.fillStyle=lblMap[st]; ctx.font='11px JetBrains Mono,monospace'; ctx.textAlign='center';
+  ctx.fillStyle=C.lbl; ctx.font='11px JetBrains Mono,monospace'; ctx.textAlign='center';
   [0,25,50,75,100].forEach(v=>{
     const x=pl+(v/100)*w;
     ctx.beginPath(); ctx.moveTo(x,pt+h); ctx.lineTo(x,pt+h+4);
-    ctx.strokeStyle=axisMap[st]; ctx.lineWidth=1; ctx.stroke();
-    ctx.fillStyle=lblMap[st]; ctx.fillText(v+(v===100?'%':''),x,pt+h+15);
+    ctx.strokeStyle=C.axis; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle=C.lbl; ctx.fillText(v+(v===100?'%':''),x,pt+h+15);
   });
 
   /* y labels */
@@ -606,86 +692,74 @@ function drawCurve(cur) {
   [0,3,6,9,12].forEach(v=>{
     const y=pt+h-(v/yMax)*h;
     ctx.beginPath(); ctx.moveTo(pl-3,y); ctx.lineTo(pl,y);
-    ctx.strokeStyle=axisMap[st]; ctx.stroke();
-    ctx.fillStyle=lblMap[st]; ctx.font='11px JetBrains Mono,monospace'; ctx.fillText(v,pl-6,y+3);
+    ctx.strokeStyle=C.axis; ctx.stroke();
+    ctx.fillStyle=C.lbl; ctx.font='11px JetBrains Mono,monospace'; ctx.fillText(v,pl-6,y+3);
   });
 
-  /* axis titles */
-  ctx.fillStyle=lblMap[st]; ctx.font='11px JetBrains Mono,monospace'; ctx.textAlign='center';
+  ctx.fillStyle=C.lbl; ctx.font='11px JetBrains Mono,monospace'; ctx.textAlign='center';
   ctx.fillText('slip  s  (%)',pl+w/2,H-2);
   ctx.save(); ctx.translate(10,pt+h/2); ctx.rotate(-Math.PI/2); ctx.fillText('F  (N)',0,0); ctx.restore();
 
-  /* Janosi curve — firm soil only */
-  const col = cc.firm;
+  /* curve fill */
   ctx.beginPath(); ctx.moveTo(pl,pt+h);
-  for(let i=0;i<=100;i++) ctx.lineTo(pl+(i/100)*w, pt+h-(janosi(i/100,'firm')/yMax)*h);
+  for(let i=0;i<=100;i++) ctx.lineTo(pl+(i/100)*w, pt+h-(janosi(i/100,soil)/yMax)*h);
   ctx.lineTo(pl+w,pt+h); ctx.closePath();
   ctx.fillStyle=col+'16'; ctx.fill();
 
+  /* curve line */
   ctx.beginPath(); ctx.strokeStyle=col; ctx.lineWidth=2.5; ctx.lineJoin='round';
   for(let i=0;i<=100;i++){
-    const x=pl+(i/100)*w, y=pt+h-(janosi(i/100,'firm')/yMax)*h;
+    const x=pl+(i/100)*w, y=pt+h-(janosi(i/100,soil)/yMax)*h;
     i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
   }
   ctx.stroke();
 
-  const ef=janosi(1,'firm'), ey=pt+h-(ef/yMax)*h;
+  const ef=janosi(1,soil), ey=pt+h-(ef/yMax)*h;
   ctx.fillStyle=col; ctx.font='bold 11px JetBrains Mono,monospace'; ctx.textAlign='left';
-  ctx.fillText('Firm', pl+w+5, ey+3);
+  ctx.fillText('Firm',pl+w+5,ey+3);
 
-  const lgF = document.getElementById('lgFirm');
-  if (lgF) lgF.style.background = col;
+  if (lgDotId) {
+    const lg = document.getElementById(lgDotId);
+    if (lg) lg.style.background = col;
+  }
 
-  /* live dot at current slip */
-  if (cur !== undefined) {
-    const sFrac = cur / 100;
-    const sx = pl+(sFrac)*w;
-    const sf = janosi(sFrac, 'firm');
-    const sy = pt+h-(sf/yMax)*h;
-    const dc = col;
+  /* live dot */
+  if (slipPctLive !== undefined) {
+    const sFrac = slipPctLive / 100;
+    const sx = pl + sFrac * w;
+    const sf = janosi(sFrac, soil);
+    const sy = pt + h - (sf / yMax) * h;
 
     ctx.beginPath(); ctx.moveTo(pl,sy); ctx.lineTo(sx,sy);
-    ctx.strokeStyle=dc+'45'; ctx.lineWidth=1; ctx.setLineDash([2,3]); ctx.stroke();
+    ctx.strokeStyle=col+'45'; ctx.lineWidth=1; ctx.setLineDash([2,3]); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(sx,pt+h); ctx.lineTo(sx,sy);
-    ctx.strokeStyle=dc+'55'; ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle=col+'55'; ctx.stroke(); ctx.setLineDash([]);
 
     ctx.beginPath(); ctx.arc(sx,sy,9,0,Math.PI*2);
-    ctx.fillStyle=dc+'1a'; ctx.fill();
+    ctx.fillStyle=col+'1a'; ctx.fill();
     ctx.beginPath(); ctx.arc(sx,sy,4.5,0,Math.PI*2);
     ctx.fillStyle='#fff'; ctx.fill();
     ctx.beginPath(); ctx.arc(sx,sy,4.5,0,Math.PI*2);
-    ctx.strokeStyle=dc; ctx.lineWidth=2; ctx.stroke();
+    ctx.strokeStyle=col; ctx.lineWidth=2; ctx.stroke();
 
     const onRight = sx < pl+w*0.72;
-    ctx.textAlign = onRight ? 'left' : 'right';
-    ctx.fillStyle = dc; ctx.font='bold 12px JetBrains Mono,monospace';
+    ctx.textAlign = onRight?'left':'right';
+    ctx.fillStyle = col; ctx.font='bold 12px JetBrains Mono,monospace';
     ctx.fillText(sf.toFixed(1)+' N', onRight?sx+12:sx-12, Math.max(sy-5,pt+12));
   }
 }
 
-/* ══════════════════════════════════════
-   OBSERVER MINI PLOT
-   Shows I(t) history + I_slip threshold
-══════════════════════════════════════ */
-function drawObserver(Icur, slipDetected) {
+function drawObserverCurve(cvObs, ctxObs, history, head, LEN, Icur, slipDetected, st) {
   const W2=cvObs.width, H=cvObs.height;
   const pl=42, pr=20, pt=12, pb=22;
   const w=W2-pl-pr, h=H-pt-pb;
-
-  const st = lastState || 'weak';
-  const bgMap   = { weak:'#faf6ee', good:'#f4fdf7', warn:'#08091a' };
-  const gridMap = { weak:'#ece6d4', good:'#88c0a0', warn:'#141628' };
-  const axisMap = { weak:'#d8cca8', good:'#60a878', warn:'#20223a' };
-  const lblMap  = { weak:'#7a6030', good:'#0a5228', warn:'#a07070' };
+  const C = getThemeColors(st);
+  const yMax=1.5;
 
   ctxObs.clearRect(0,0,W2,H);
-  ctxObs.fillStyle=bgMap[st]; ctxObs.fillRect(0,0,W2,H);
+  ctxObs.fillStyle=C.bg; ctxObs.fillRect(0,0,W2,H);
 
-  /* yMax: show I up to 3 A so threshold at 0.190 A is clearly visible */
-  const yMax = 3.0;
-
-  /* grid */
-  ctxObs.strokeStyle=gridMap[st]; ctxObs.lineWidth=1;
+  ctxObs.strokeStyle=C.grid; ctxObs.lineWidth=1;
   [0.25,0.5,0.75,1].forEach(f=>{
     ctxObs.beginPath(); ctxObs.moveTo(pl+f*w,pt); ctxObs.lineTo(pl+f*w,pt+h); ctxObs.stroke();
   });
@@ -693,161 +767,420 @@ function drawObserver(Icur, slipDetected) {
     ctxObs.beginPath(); ctxObs.moveTo(pl,pt+h-f*h); ctxObs.lineTo(pl+w,pt+h-f*h); ctxObs.stroke();
   });
 
-  /* I_slip threshold line */
-  const thY = pt+h-(I_slip/yMax)*h;
+  const thY=pt+h-(I_SLIP/yMax)*h;
   ctxObs.setLineDash([5,3]);
   ctxObs.beginPath(); ctxObs.moveTo(pl,thY); ctxObs.lineTo(pl+w,thY);
   ctxObs.strokeStyle='#e02020'; ctxObs.lineWidth=1.8; ctxObs.stroke();
   ctxObs.setLineDash([]);
   ctxObs.fillStyle='#e02020'; ctxObs.font='bold 11px JetBrains Mono,monospace'; ctxObs.textAlign='left';
-  ctxObs.fillText('I_slip = 0.190 A (s=16%)', pl+6, thY-5);
+  ctxObs.fillText('I_slip = 0.190 A (s=16%)',pl+6,thY-5);
 
-  /* shade above threshold — slip danger zone */
   ctxObs.fillStyle='rgba(224,32,32,0.07)';
-  ctxObs.fillRect(pl, pt, w, thY-pt);
+  ctxObs.fillRect(pl,pt,w,thY-pt);
 
-  /* axes */
-  ctxObs.strokeStyle=axisMap[st]; ctxObs.lineWidth=1;
+  ctxObs.strokeStyle=C.axis; ctxObs.lineWidth=1;
   ctxObs.beginPath(); ctxObs.moveTo(pl,pt); ctxObs.lineTo(pl,pt+h); ctxObs.stroke();
   ctxObs.beginPath(); ctxObs.moveTo(pl,pt+h); ctxObs.lineTo(pl+w,pt+h); ctxObs.stroke();
 
-  /* y labels — 0 to 3 A in 0.5 steps */
-  ctxObs.textAlign='right'; ctxObs.fillStyle=lblMap[st]; ctxObs.font='10px JetBrains Mono,monospace';
-  [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0].forEach(v=>{
+  ctxObs.textAlign='right'; ctxObs.fillStyle=C.lbl; ctxObs.font='10px JetBrains Mono,monospace';
+  [0,0.25,0.5,0.75,1.0,1.25,1.5].forEach(v=>{
     const y=pt+h-(v/yMax)*h;
     ctxObs.beginPath(); ctxObs.moveTo(pl-3,y); ctxObs.lineTo(pl,y);
-    ctxObs.strokeStyle=axisMap[st]; ctxObs.stroke();
-    ctxObs.fillStyle=lblMap[st]; ctxObs.fillText(v.toFixed(1),pl-5,y+3);
+    ctxObs.strokeStyle=C.axis; ctxObs.stroke();
+    ctxObs.fillStyle=C.lbl; ctxObs.fillText(v.toFixed(1),pl-5,y+3);
   });
 
-  /* x label */
-  ctxObs.fillStyle=lblMap[st]; ctxObs.font='10px JetBrains Mono,monospace'; ctxObs.textAlign='center';
-  ctxObs.fillText('time →', pl+w/2, H-3);
-
-  /* axis title */
+  ctxObs.fillStyle=C.lbl; ctxObs.font='10px JetBrains Mono,monospace'; ctxObs.textAlign='center';
+  ctxObs.fillText('time →',pl+w/2,H-3);
   ctxObs.save(); ctxObs.translate(10,pt+h/2); ctxObs.rotate(-Math.PI/2);
-  ctxObs.fillStyle=lblMap[st]; ctxObs.font='10px JetBrains Mono,monospace'; ctxObs.textAlign='center';
+  ctxObs.fillStyle=C.lbl; ctxObs.font='10px JetBrains Mono,monospace'; ctxObs.textAlign='center';
   ctxObs.fillText('I  (A)',0,0); ctxObs.restore();
 
-  /* I(t) history curve */
-  /* colour: green below threshold, red above */
   const lineCol = slipDetected ? '#e02020' : '#0a7830';
   ctxObs.beginPath();
-  for (let i=0; i<OBS_LEN; i++) {
-    const idx  = (obsHead + i) % OBS_LEN;
-    const x    = pl + (i/(OBS_LEN-1))*w;
-    const val  = Math.min(obsHistory[idx], yMax);
-    const y    = pt+h-(val/yMax)*h;
-    i===0 ? ctxObs.moveTo(x,y) : ctxObs.lineTo(x,y);
+  for(let i=0;i<LEN;i++){
+    const idx=(head+i)%LEN;
+    const x=pl+(i/(LEN-1))*w;
+    const val=Math.min(history[idx],yMax);
+    const y=pt+h-(val/yMax)*h;
+    i===0?ctxObs.moveTo(x,y):ctxObs.lineTo(x,y);
   }
   ctxObs.strokeStyle=lineCol; ctxObs.lineWidth=2; ctxObs.lineJoin='round'; ctxObs.stroke();
 
-  /* live dot at rightmost point */
-  const lx = pl+w;
-  const lval = Math.min(Icur, yMax);
-  const ly = pt+h-(lval/yMax)*h;
+  const lx=pl+w, lval=Math.min(Icur,yMax), ly=pt+h-(lval/yMax)*h;
   ctxObs.beginPath(); ctxObs.arc(lx,ly,4,0,Math.PI*2);
   ctxObs.fillStyle=lineCol; ctxObs.fill();
 }
 
-/* ══════════════════════════════════════
-   OBSERVER UI UPDATE
-══════════════════════════════════════ */
-function updateObserverUI(Ft, slipPctCur) {
-  const sFrac = slipPctCur / 100;
+/* ── Page 2 dedicated observer: yMax=1, I_slip=0.4, I_A=0.2, I_B=0.6 ── */
+function drawObserverCurveP2(cvObs, ctxObs, history, head, LEN, Icur, slipDetected, st) {
+  const W2=cvObs.width, H=cvObs.height;
+  const pl=42, pr=20, pt=12, pb=22;
+  const w=W2-pl-pr, h=H-pt-pb;
+  const C = getThemeColors(st);
+  const yMax = 1.0;
 
-  /* ── Correct physics chain ───────────────────────────────────────────
-     ω rises with slip (wheel spins faster as grip is lost)
-     I rises with ω — NOT with Ft — so I is monotonically increasing ✓
-     v_encoder = ω·r  (overestimates true speed when slipping)
-     v_corrected = v_encoder − Sc  (observer output)
-     v_true = ω_nom·r  (constant: motor holds wheel speed)               */
-  const omega  = getOmegaWheel(sFrac);   // rad/s — rises with slip (for current)
-  const I      = getCurrent(Ft, omega);  // A — rises with slip ✓
-  const slip   = I > I_slip;
-  /* Sc = ξ · (I − I_slip)/I_slip · v_true  — dimensionally m/s, normalized correction
-     When slip detected, observer reduces v_true proportionally to excess current.
-     Capped so v_corr never goes negative.                                        */
-  const v_true = getRobotSpeed(Ft);             // m/s — same as animation, peaks at optimal
-  const v_enc  = omega * r_w;                   // m/s — encoder overestimate (grows with ω)
-  const Sc     = slip
-    ? Math.min(xi * (I - I_slip) / I_slip * v_true, v_true)
-    : 0;
-  const v_corr = Math.max(0, v_true - Sc);      // m/s — observer output
+  ctxObs.clearRect(0,0,W2,H);
+  ctxObs.fillStyle=C.bg; ctxObs.fillRect(0,0,W2,H);
 
-  /* push to ring buffer */
-  obsHistory[obsHead] = I;
-  obsHead = (obsHead + 1) % OBS_LEN;
+  /* grid */
+  ctxObs.strokeStyle=C.grid; ctxObs.lineWidth=1;
+  [0.25,0.5,0.75,1].forEach(f=>{
+    ctxObs.beginPath(); ctxObs.moveTo(pl+f*w,pt); ctxObs.lineTo(pl+f*w,pt+h); ctxObs.stroke();
+  });
+  [0.2,0.4,0.6,0.8].forEach(f=>{
+    ctxObs.beginPath(); ctxObs.moveTo(pl,pt+h-f*h); ctxObs.lineTo(pl+w,pt+h-f*h); ctxObs.stroke();
+  });
 
-  drawObserver(I, slip);
+  /* I_slip threshold at 0.4 */
+  const thY = pt+h-(P2_I_SLIP/yMax)*h;
+  ctxObs.setLineDash([5,3]);
+  ctxObs.beginPath(); ctxObs.moveTo(pl,thY); ctxObs.lineTo(pl+w,thY);
+  ctxObs.strokeStyle='#e02020'; ctxObs.lineWidth=1.8; ctxObs.stroke();
+  ctxObs.setLineDash([]);
+  ctxObs.fillStyle='#e02020'; ctxObs.font='bold 11px JetBrains Mono,monospace'; ctxObs.textAlign='left';
+  ctxObs.fillText('I_slip = 0.4 A',pl+6,thY-5);
 
+  /* shade above threshold */
+  ctxObs.fillStyle='rgba(224,32,32,0.07)';
+  ctxObs.fillRect(pl,pt,w,thY-pt);
 
+  /* Zone A level marker at 0.2 */
+  const aY = pt+h-(P2_I_A/yMax)*h;
+  ctxObs.setLineDash([3,4]);
+  ctxObs.beginPath(); ctxObs.moveTo(pl,aY); ctxObs.lineTo(pl+w,aY);
+  ctxObs.strokeStyle='#0a7830'; ctxObs.lineWidth=1.2; ctxObs.stroke();
+  ctxObs.setLineDash([]);
+  ctxObs.fillStyle='#0a7830'; ctxObs.font='10px JetBrains Mono,monospace'; ctxObs.textAlign='left';
+  ctxObs.fillText('Zone A  I=0.2',pl+6,aY+11);
 
-  const badge = document.getElementById('obsDetection');
-  badge.textContent = slip ? 'SLIP DETECTED' : 'NO SLIP';
-  badge.className   = 'obs-detection ' + (slip ? 'slip' : 'no-slip');
+  /* axes */
+  ctxObs.strokeStyle=C.axis; ctxObs.lineWidth=1;
+  ctxObs.beginPath(); ctxObs.moveTo(pl,pt); ctxObs.lineTo(pl,pt+h); ctxObs.stroke();
+  ctxObs.beginPath(); ctxObs.moveTo(pl,pt+h); ctxObs.lineTo(pl+w,pt+h); ctxObs.stroke();
 
-  return { v_enc, v_corr, v_true };
+  /* y labels 0 → 1.0 in 0.2 steps */
+  ctxObs.textAlign='right'; ctxObs.fillStyle=C.lbl; ctxObs.font='10px JetBrains Mono,monospace';
+  [0, 0.2, 0.4, 0.6, 0.8, 1.0].forEach(v=>{
+    const y=pt+h-(v/yMax)*h;
+    ctxObs.beginPath(); ctxObs.moveTo(pl-3,y); ctxObs.lineTo(pl,y);
+    ctxObs.strokeStyle=C.axis; ctxObs.stroke();
+    ctxObs.fillStyle=C.lbl; ctxObs.fillText(v.toFixed(1),pl-5,y+3);
+  });
+
+  /* axis labels */
+  ctxObs.fillStyle=C.lbl; ctxObs.font='10px JetBrains Mono,monospace'; ctxObs.textAlign='center';
+  ctxObs.fillText('time →',pl+w/2,H-3);
+  ctxObs.save(); ctxObs.translate(10,pt+h/2); ctxObs.rotate(-Math.PI/2);
+  ctxObs.fillStyle=C.lbl; ctxObs.font='10px JetBrains Mono,monospace'; ctxObs.textAlign='center';
+  ctxObs.fillText('I  (A)',0,0); ctxObs.restore();
+
+  /* I(t) history line */
+  const lineCol = slipDetected ? '#e02020' : '#0a7830';
+  ctxObs.beginPath();
+  for(let i=0;i<LEN;i++){
+    const idx=(head+i)%LEN;
+    const x=pl+(i/(LEN-1))*w;
+    const val=Math.min(history[idx],yMax);
+    const y=pt+h-(val/yMax)*h;
+    i===0?ctxObs.moveTo(x,y):ctxObs.lineTo(x,y);
+  }
+  ctxObs.strokeStyle=lineCol; ctxObs.lineWidth=2; ctxObs.lineJoin='round'; ctxObs.stroke();
+
+  /* live dot + value label */
+  const lx=pl+w, lval=Math.min(Icur,yMax), ly=pt+h-(lval/yMax)*h;
+  ctxObs.beginPath(); ctxObs.arc(lx,ly,4,0,Math.PI*2);
+  ctxObs.fillStyle=lineCol; ctxObs.fill();
+  ctxObs.fillStyle=lineCol; ctxObs.font='bold 10px JetBrains Mono,monospace'; ctxObs.textAlign='right';
+  ctxObs.fillText('I='+Icur.toFixed(2)+' A', lx-8, Math.max(ly-5,pt+10));
 }
 
 /* ══════════════════════════════════════
-   MAIN LOOP — delta-time based
-   All motion derived from v_robot (m/s)
-   so stat display = visual speed exactly.
+   PAGE 1 STATE
 ══════════════════════════════════════ */
-const PX_PER_M = 600;   // 1 m/s → 600 px/s; at v_max=0.25m/s robot crosses ~600px in 4s
-let lastT = null;
+let p1_soil     = 'firm';
+let p1_slipPct  = 0;
+let p1_robotX   = 44;
+const P1_OBS_LEN = 120;
+const p1_obsHist = new Array(P1_OBS_LEN).fill(0);
+let p1_obsHead   = 0;
+let p1_lastT     = null;
+let p1_state     = 'weak';
 
-function loop(ts) {
-  /* delta time in seconds, capped to avoid jump on tab-switch */
-  if (!lastT) lastT = ts;
-  const dt  = Math.min((ts - lastT) / 1000, 0.05);
-  lastT = ts;
+const p1_cv     = document.getElementById('p1-cv');
+const p1_ctx    = p1_cv.getContext('2d');
+const p1_cvObs  = document.getElementById('p1-cvObs');
+const p1_ctxObs = p1_cvObs.getContext('2d');
+p1_cv.width=900; p1_cv.height=280;
+p1_cvObs.width=900; p1_cvObs.height=200;
 
-  const sFrac   = slipPct / 100;
-  const Ft      = janosi(sFrac, soil);     // traction from Janosi curve (N)
-  const v_robot = getRobotSpeed(Ft);       // m/s = Ft/b_damp, peaks at optimal zone
+function p1_onSlip(v) {
+  p1_slipPct = v;
+  document.getElementById('p1-tv').textContent = v + '%';
+  document.getElementById('p1-slider').style.setProperty('--pct', v + '%');
+}
+p1_onSlip(0);
 
-  /* state classification */
-  let st = slipPct < 8 ? 'weak' : slipPct <= 15 ? 'good' : 'warn';
-  applyState(st);
+const STATES = {
+  weak: { bodyClass:'', wClass:'spinning', statusTxt:'WEAK GRIP', badgeClass:'weak', sensorBg:'#c07800' },
+  good: { bodyClass:'state-good', wClass:'optimal', statusTxt:'⚡ OPTIMAL', badgeClass:'good', sensorBg:'#0e7830' },
+  warn: { bodyClass:'state-warn', wClass:'slipping', statusTxt:'DIGGING ⚠', badgeClass:'warn', sensorBg:'#e02020' },
+};
+let p1_lastBodyClass = '';
 
-  /* stat display — exactly matches visual motion */
+function p1_applyState(st) {
+  p1_state = st;
+  const S = STATES[st];
+  if (S.bodyClass !== p1_lastBodyClass) {
+    document.body.className = S.bodyClass;
+    p1_lastBodyClass = S.bodyClass;
+  }
+  const badge = document.getElementById('p1-stateBadge');
+  badge.textContent = S.statusTxt;
+  badge.className   = 'state-badge ' + S.badgeClass;
+}
 
-  /* wheel spin period derived from v_robot and wheel circumference
-     period = circumference / v = 2π·r / v_robot
-     slipping wheels: fixed fast period (they spin faster than robot moves) */
-  const wb = 'r-wheel';
-  if (st === 'warn') {
-    wL.className = `${wb} wL slipping`;
-    wR.className = `${wb} wR slipping`;
-    if (Math.random() > 0.2) spawnDust(slipPct);
+function p1_spawnDust(slip) {
+  const scene   = document.getElementById('scene');
+  const dust    = document.getElementById('p1-dust');
+  const slipFrac = Math.min((slip-15)/85, 1);
+  const n = Math.round(2 + slipFrac * 6);
+  const groundY = scene.offsetHeight - 28;
+  for (let i=0;i<n;i++) {
+    const p = document.createElement('div');
+    const sz = 2 + Math.random()*3 + slipFrac*4;
+    const col = `hsl(${28+Math.random()*16},${44+Math.random()*18}%,${40+Math.random()*14}%)`;
+    const startX = p1_robotX + 5 + Math.random()*46;
+    const startY = groundY - 1 - Math.random()*3;
+    const burstUp  = -(4 + Math.random()*10);
+    const windLeft = -(25 + Math.random()*(scene.offsetWidth*0.45));
+    const finalY   = burstUp + (Math.random()-0.4)*6;
+    Object.assign(p.style,{
+      position:'absolute',width:sz+'px',height:sz+'px',borderRadius:'50%',
+      background:col,left:startX+'px',top:startY+'px',zIndex:4,pointerEvents:'none',
+    });
+    dust.appendChild(p);
+    const dur = 700+Math.random()*600;
+    p.animate([
+      {opacity:0,   transform:'translate(0,0)',                                 offset:0   },
+      {opacity:0.8, transform:`translate(${windLeft*0.08}px,${burstUp}px)`,    offset:0.12},
+      {opacity:0.6, transform:`translate(${windLeft*0.5}px,${finalY*0.7}px)`, offset:0.55},
+      {opacity:0,   transform:`translate(${windLeft}px,${finalY}px)`,          offset:1   },
+    ],{duration:dur,easing:'ease-out',delay:i*60}).onfinish=()=>p.remove();
+  }
+}
+
+function p1_loop(ts) {
+  if(!p1_lastT) p1_lastT=ts;
+  const dt=Math.min((ts-p1_lastT)/1000,0.05); p1_lastT=ts;
+
+  const sFrac = p1_slipPct/100;
+  const Ft    = janosi(sFrac, 'firm');
+  const v_robot = getRobotSpeed(Ft);
+  const st = p1_slipPct < 8 ? 'weak' : p1_slipPct <= 15 ? 'good' : 'warn';
+  p1_applyState(st);
+
+  const wb='r-wheel';
+  const wL=document.getElementById('p1-wL'), wR=document.getElementById('p1-wR');
+  if(st==='warn'){
+    wL.className=`${wb} wL slipping`; wR.className=`${wb} wR slipping`;
+    if(Math.random()>0.2) p1_spawnDust(p1_slipPct);
   } else {
-    const circumf = 2 * Math.PI * r_w;                        // 0.157 m
-    const period  = v_robot > 0.001
-      ? (circumf / v_robot).toFixed(2) + 's'
-      : '99s';                                                 // nearly stopped
-    const wst = STATES[st].wClass;
-    wL.className = `${wb} wL ${wst} spinning`;
-    wR.className = `${wb} wR ${wst} spinning`;
-    wL.style.setProperty('--spd', period);
-    wR.style.setProperty('--spd', period);
+    const circumf=2*Math.PI*r_w;
+    const period=v_robot>0.001?(circumf/v_robot).toFixed(2)+'s':'99s';
+    const wst=STATES[st].wClass;
+    wL.className=`${wb} wL ${wst} spinning`; wR.className=`${wb} wR ${wst} spinning`;
+    wL.style.setProperty('--spd',period); wR.style.setProperty('--spd',period);
   }
 
-  /* robot position — px/s = v_robot * PX_PER_M */
-  robotX += v_robot * PX_PER_M * dt;
-  if (robotX > scene.offsetWidth - 110) robotX = 44;
-  robotWrap.style.left = robotX + 'px';
+  p1_robotX += v_robot * 120 * dt;
+  const scene = document.getElementById('scene');
+  if(p1_robotX > scene.offsetWidth-110) p1_robotX=44;
+  document.getElementById('p1-robotWrap').style.left=p1_robotX+'px';
 
-  drawCurve(slipPct);
-  updateObserverUI(Ft, slipPct);
+  /* observer */
+  const omega = getOmega(sFrac);
+  const I     = getCurrent(omega);
+  const slip  = I > I_SLIP;
+  p1_obsHist[p1_obsHead]=I; p1_obsHead=(p1_obsHead+1)%P1_OBS_LEN;
 
-  requestAnimationFrame(loop);
+  drawTractionCurve(p1_cv, p1_ctx, p1_slipPct, 'firm', st, 'p1-lgFirm');
+  drawObserverCurve(p1_cvObs, p1_ctxObs, p1_obsHist, p1_obsHead, P1_OBS_LEN, I, slip, st);
+
+  const det=document.getElementById('p1-obsDetection');
+  det.textContent=slip?'SLIP DETECTED':'NO SLIP';
+  det.className='obs-detection '+(slip?'slip':'no-slip');
+
+  requestAnimationFrame(p1_loop);
 }
 
-drawCurve(0);
-drawObserver(0, false);
-requestAnimationFrame(loop);
+/* ══════════════════════════════════════
+   PAGE 2 STATE
+══════════════════════════════════════ */
+let p2_zone     = 'A';
+let p2_animSlip = 0.11;
+let p2_robotX   = 44;
+const P2_OBS_LEN = 120;
+const p2_obsHist = new Array(P2_OBS_LEN).fill(0);
+let p2_obsHead   = 0;
+let p2_lastT     = null;
+
+const p2_cv     = document.getElementById('p2-cv');
+const p2_ctx    = p2_cv.getContext('2d');
+const p2_cvObs  = document.getElementById('p2-cvObs');
+const p2_ctxObs = p2_cvObs.getContext('2d');
+p2_cv.width=900; p2_cv.height=280;
+p2_cvObs.width=900; p2_cvObs.height=200;
+
+const ZONE_DEFS = {
+  A: { slipPct:11, bodyClass:'state-good', statusTxt:'⚡ OPTIMAL', badgeClass:'good' },
+  B: { slipPct:70, bodyClass:'state-warn', statusTxt:'DIGGING ⚠', badgeClass:'warn' },
+};
+let p2_lastBodyClass = '';
+
+function p2_setZone(z) {
+  p2_zone = z;
+  document.getElementById('p2-btnA').className = 'zone-btn'+(z==='A'?' z-active-A':'');
+  document.getElementById('p2-btnB').className = 'zone-btn'+(z==='B'?' z-active-B':'');
+}
+
+function p2_applyState(z) {
+  const D = ZONE_DEFS[z];
+  if (D.bodyClass !== p2_lastBodyClass) {
+    document.body.className = D.bodyClass;
+    p2_lastBodyClass = D.bodyClass;
+  }
+  const badge = document.getElementById('p2-stateBadge');
+  badge.textContent = D.statusTxt;
+  badge.className   = 'state-badge ' + D.badgeClass;
+}
+
+function p2_spawnDust(slip, robotX) {
+  const scene   = document.getElementById('scene2');
+  const dust    = document.getElementById('p2-dust');
+  const slipFrac = Math.min((slip-15)/85,1);
+  const n = Math.round(2+slipFrac*6);
+  const groundY = scene.offsetHeight-28;
+  for(let i=0;i<n;i++){
+    const p=document.createElement('div');
+    const sz=2+Math.random()*3+slipFrac*4;
+    const col=`hsl(${28+Math.random()*16},${44+Math.random()*18}%,${40+Math.random()*14}%)`;
+    const startX=robotX+5+Math.random()*46;
+    const startY=groundY-1-Math.random()*3;
+    const burstUp=-(4+Math.random()*10);
+    const windLeft=-(25+Math.random()*(scene.offsetWidth*0.45));
+    const finalY=burstUp+(Math.random()-0.4)*6;
+    Object.assign(p.style,{
+      position:'absolute',width:sz+'px',height:sz+'px',borderRadius:'50%',
+      background:col,left:startX+'px',top:startY+'px',zIndex:4,pointerEvents:'none',
+    });
+    dust.appendChild(p);
+    const dur=700+Math.random()*600;
+    p.animate([
+      {opacity:0,transform:'translate(0,0)',offset:0},
+      {opacity:0.8,transform:`translate(${windLeft*0.08}px,${burstUp}px)`,offset:0.12},
+      {opacity:0.6,transform:`translate(${windLeft*0.5}px,${finalY*0.7}px)`,offset:0.55},
+      {opacity:0,transform:`translate(${windLeft}px,${finalY}px)`,offset:1},
+    ],{duration:dur,easing:'ease-out',delay:i*60}).onfinish=()=>p.remove();
+  }
+}
+
+function p2_loop(ts) {
+  if(!p2_lastT) p2_lastT=ts;
+  const dt=Math.min((ts-p2_lastT)/1000,0.05); p2_lastT=ts;
+
+  /* smooth slip animation */
+  const target = ZONE_DEFS[p2_zone].slipPct / 100;
+  p2_animSlip += (target - p2_animSlip) * Math.min(dt * 8, 1);
+
+  const sFrac   = p2_animSlip;
+  const Ft      = janosi(sFrac, 'firm');
+  const omega   = getOmega(sFrac);
+  /* Page 2: I is fixed per zone, not computed from physics */
+  const I       = p2_zone === 'B' ? P2_I_B : P2_I_A;
+  const slip    = I > P2_I_SLIP;
+  const v_true_phys  = getRobotSpeed(Ft);
+  const v_enc_phys   = omega * r_w;
+  const Sc_phys      = slip ? Math.min(xi*(I-P2_I_SLIP)/P2_I_SLIP*v_true_phys, v_true_phys) : 0;
+  const v_corr_phys  = Math.max(0, v_true_phys - Sc_phys);
+
+  /* Zone A: fast, no slip — v_corr = v_enc (observer makes no correction)
+     Zone B: slow, slipping — exact values from TER slide / Ojeda Fig.2    */
+  const v_enc  = p2_zone === 'B' ? 1.3 : 1.0;
+  const v_true = p2_zone === 'B' ? 0.4 : 0.9;
+  const v_corr = p2_zone === 'B' ? 0.6 : 1.0;   /* Zone A: v_corr = v_enc (no correction needed) */
+
+  /* body/badge state from zone */
+  p2_applyState(p2_zone);
+
+  /* robot */
+  const wb='r-wheel';
+  const wL=document.getElementById('p2-wL'), wR=document.getElementById('p2-wR');
+  if(p2_zone==='B'){
+    wL.className=`${wb} wL slipping`; wR.className=`${wb} wR slipping`;
+    if(Math.random()>0.2) p2_spawnDust(sFrac*100, p2_robotX);
+  } else {
+    const circumf=2*Math.PI*r_w;
+    const period=v_true>0.001?(circumf/v_true).toFixed(2)+'s':'99s';
+    wL.className=`${wb} wL optimal spinning`; wR.className=`${wb} wR optimal spinning`;
+    wL.style.setProperty('--spd',period); wR.style.setProperty('--spd',period);
+  }
+
+  /* robot moves at v_true: Zone A=1.0 m/s (fast), Zone B=0.4 m/s (slow) */
+  p2_robotX += v_true * 120 * dt;
+  const scene2 = document.getElementById('scene2');
+  if(p2_robotX > scene2.offsetWidth-110) p2_robotX=44;
+  document.getElementById('p2-robotWrap').style.left=p2_robotX+'px';
+
+  /* ring buffer — push fixed zone I value */
+  p2_obsHist[p2_obsHead]=I; p2_obsHead=(p2_obsHead+1)%P2_OBS_LEN;
+
+  /* graphs */
+  const st2 = p2_zone==='A' ? 'good' : 'warn';
+  drawTractionCurve(p2_cv, p2_ctx, sFrac*100, 'firm', st2, 'p2-lgFirm');
+  drawObserverCurveP2(p2_cvObs, p2_ctxObs, p2_obsHist, p2_obsHead, P2_OBS_LEN, I, slip, st2);
+
+  /* observer badge */
+  const det=document.getElementById('p2-obsDetection');
+  det.textContent=slip?'SLIP DETECTED':'NO SLIP';
+  det.className='obs-detection '+(slip?'slip':'no-slip');
+
+  /* velocity row — 1 decimal, Zone B locked to slide values */
+  document.getElementById('p2-vEnc').textContent  = v_enc.toFixed(1);
+  document.getElementById('p2-vReal').textContent = v_true.toFixed(1);
+  document.getElementById('p2-vCorr').textContent = v_corr.toFixed(1);
+
+  const encBadge  = document.getElementById('p2-encBadge');
+  const corrBadge = document.getElementById('p2-corrBadge');
+  if(slip){
+    encBadge.textContent='OVERESTIMATE ↑'; encBadge.className='vel-badge bad';
+    corrBadge.textContent='CORRECTED ✓';   corrBadge.className='vel-badge ok';
+  } else {
+    encBadge.textContent='ACCURATE';        encBadge.className='vel-badge ok';
+    corrBadge.textContent='= v_enc';        corrBadge.className='vel-badge ok';
+  }
+
+  requestAnimationFrame(p2_loop);
+}
+
+/* ══════════════════════════════════════
+   TAB AWARENESS — pause/resume body class
+   When switching tabs we need to re-apply
+   the correct body class for the active page
+══════════════════════════════════════ */
+const _origSwitch = switchTab;
+window.switchTab = function(n) {
+  _origSwitch(n);
+  if(n===1){ document.body.className = STATES[p1_state]?.bodyClass || ''; p1_lastBodyClass = document.body.className; }
+  if(n===2){ document.body.className = ZONE_DEFS[p2_zone]?.bodyClass || 'state-good'; p2_lastBodyClass = document.body.className; }
+};
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+p2_setZone('A');
+requestAnimationFrame(p1_loop);
+requestAnimationFrame(p2_loop);
 </script>
 </body>
 </html>
