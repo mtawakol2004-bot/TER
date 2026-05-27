@@ -396,7 +396,7 @@ footer {
 <header>
   <div>
     <div class="h-title">Wheel Slip<br>Simulator</div>
-    <div class="h-sub">TER — Tawakol · Hansali · Shakil · Lyon 1 · 2026</div>
+
   </div>
 </header>
 
@@ -443,7 +443,7 @@ footer {
         </div>
       </div>
       <div class="graph-wrap">
-        <canvas id="p1-cv" height="280"></canvas>
+        <canvas id="p1-cv" height="200"></canvas>
       </div>
     </div>
 
@@ -499,19 +499,14 @@ footer {
 
     <!-- Zone buttons -->
     <div>
-      <div class="graph-header" style="margin-bottom:0.75rem;">
-        <span class="graph-title">Select zone</span>
-      </div>
       <div class="zone-btns">
         <button class="zone-btn z-active-A" id="p2-btnA" onclick="p2_setZone('A')">
           <span class="zb-title">Zone A</span>
-          <span class="zb-range">s = 8 – 15% · Optimal</span>
-          <span class="zb-desc">Peak traction · No slip detected</span>
+          <span class="zb-range">s = 10%</span>
         </button>
         <button class="zone-btn" id="p2-btnB" onclick="p2_setZone('B')">
           <span class="zb-title">Zone B</span>
-          <span class="zb-range">s = 70% · Slipping</span>
-          <span class="zb-desc">I &gt; I_slip · Observer corrects v_enc</span>
+          <span class="zb-range">s = 70%</span>
         </button>
       </div>
     </div>
@@ -527,7 +522,7 @@ footer {
         </div>
       </div>
       <div class="graph-wrap">
-        <canvas id="p2-cv" height="280"></canvas>
+        <canvas id="p2-cv" height="200"></canvas>
       </div>
     </div>
 
@@ -537,20 +532,17 @@ footer {
         <div class="vel-label">v_enc — encoder</div>
         <div class="vel-value" id="p2-vEnc">—</div>
         <div class="vel-unit">m / s</div>
-        <div class="vel-sublabel">wheel odometry (raw)</div>
         <span class="vel-badge ok" id="p2-encBadge">ACCURATE</span>
       </div>
       <div class="vel-cell vreal">
         <div class="vel-label">v_true — real speed</div>
         <div class="vel-value" id="p2-vReal">—</div>
         <div class="vel-unit">m / s</div>
-        <div class="vel-sublabel">F_t / b_damp (Janosi)</div>
       </div>
       <div class="vel-cell vcorr">
         <div class="vel-label">v_corr — corrected</div>
         <div class="vel-value" id="p2-vCorr">—</div>
         <div class="vel-unit">m / s</div>
-        <div class="vel-sublabel">observer output</div>
         <span class="vel-badge ok" id="p2-corrBadge">NO SLIP</span>
       </div>
     </div>
@@ -572,10 +564,7 @@ footer {
 </div>
 </div><!-- /page2 -->
 
-<footer>
-  <span>TER — Tawakol · Hansali</span>
-  <span>Université Claude Bernard Lyon 1 · 2026</span>
-</footer>
+
 
 <script>
 /* ══════════════════════════════════════
@@ -911,7 +900,7 @@ const p1_cv     = document.getElementById('p1-cv');
 const p1_ctx    = p1_cv.getContext('2d');
 const p1_cvObs  = document.getElementById('p1-cvObs');
 const p1_ctxObs = p1_cvObs.getContext('2d');
-p1_cv.width=900; p1_cv.height=280;
+p1_cv.width=900; p1_cv.height=200;
 p1_cvObs.width=900; p1_cvObs.height=200;
 
 function p1_onSlip(v) {
@@ -993,7 +982,7 @@ function p1_loop(ts) {
     wL.style.setProperty('--spd',period); wR.style.setProperty('--spd',period);
   }
 
-  p1_robotX += v_robot * 120 * dt;
+  p1_robotX += v_robot * 380 * dt;
   const scene = document.getElementById('scene');
   if(p1_robotX > scene.offsetWidth-110) p1_robotX=44;
   document.getElementById('p1-robotWrap').style.left=p1_robotX+'px';
@@ -1029,7 +1018,7 @@ const p2_cv     = document.getElementById('p2-cv');
 const p2_ctx    = p2_cv.getContext('2d');
 const p2_cvObs  = document.getElementById('p2-cvObs');
 const p2_ctxObs = p2_cvObs.getContext('2d');
-p2_cv.width=900; p2_cv.height=280;
+p2_cv.width=900; p2_cv.height=200;
 p2_cvObs.width=900; p2_cvObs.height=200;
 
 const ZONE_DEFS = {
@@ -1127,7 +1116,10 @@ function p2_loop(ts) {
   }
 
   /* robot moves at v_true: Zone A=1.0 m/s (fast), Zone B=0.4 m/s (slow) */
-  p2_robotX += v_true * 120 * dt;
+  /* visual scale: same 300 px/s multiplier as page 1, but use proportional
+     speeds: Zone A ≈ page-1 optimal (0.25), Zone B ≈ 40% of that (0.10)  */
+  const v_robot_visual = p2_zone === 'B' ? 0.10 : 0.25;
+  p2_robotX += v_robot_visual * 300 * dt;
   const scene2 = document.getElementById('scene2');
   if(p2_robotX > scene2.offsetWidth-110) p2_robotX=44;
   document.getElementById('p2-robotWrap').style.left=p2_robotX+'px';
